@@ -2,8 +2,11 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
+  const router = useRouter();
+
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -28,6 +31,7 @@ export default function SignInForm() {
         alert("Error: " + error.message);
       } else {
         alert("Inicio de sesión exitoso.");
+        router.push("/");
         // Aquí podrías redirigir al usuario a otra página
       }
     } catch (err) {
