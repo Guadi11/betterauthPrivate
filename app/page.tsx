@@ -1,4 +1,4 @@
-import SessionCard from "@/components/session-card";
+import SessionCard from "@/components/session-card-sv";
 import SignInButton from "@/components/sign-in-button";
 import SignOutButton from "@/components/sign-out-button";
 import SignUpButton from "@/components/sign-up";
