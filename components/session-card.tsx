@@ -11,9 +11,10 @@ export default function SessionCard() {
     const fetchSession = async () => {
       try {
         const { data } = await authClient.getSession();
-        setSession(data as UserSession);
+        setSession(data || null);
       } catch (error) {
         console.error("Error al obtener la sesión:", error);
+        setSession(null);
       }
     };
 
@@ -21,7 +22,7 @@ export default function SessionCard() {
   }, []);
 
   if (!session) {
-    return <p>Cargando sesión...</p>;
+    return <p>No hay sesión activa.</p>;
   }
 
   return (
