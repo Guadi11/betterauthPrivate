@@ -1,3 +1,4 @@
+import AddMembersButton from "@/components/assign-users-button";
 import CreateOrganizationsButton from "@/components/create-organizations-button";
 import SessionCard from "@/components/session-card-sv";
 import SignInButton from "@/components/sign-in-button";
@@ -13,6 +14,7 @@ export default function Home() {
       <SignInButton/>
       <SignOutButton/>
       <CreateOrganizationsButton/>
+      <AddMembersButton/>
     </div>
   );
 }
