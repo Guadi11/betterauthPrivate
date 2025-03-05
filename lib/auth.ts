@@ -1,13 +1,14 @@
 import { betterAuth } from "better-auth";
 import { Pool } from "pg"
-import { username } from "better-auth/plugins";
+import { organization, username } from "better-auth/plugins";
  
 export const auth = betterAuth({
     emailAndPassword: {
         enabled: true
     },
     plugins: [
-        username()
+        username(),
+        organization()
     ],
     database: new Pool({
         user: 'postgres',
