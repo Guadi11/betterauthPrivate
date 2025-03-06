@@ -16,12 +16,12 @@ interface Organization {
   // Otros campos de organización
 }
 
-interface UserOrganization {
-  nombre: string;
+export interface UserOrganization {
+  nombre_usuario: string;
   username: string;
-  organization: string;
-  role: string;
-}
+  nombre_organizacion: string;
+  rol: string;
+} //TODO Corregir nombres
 
 // Obtener todas las organizaciones de un usuario
 export async function getUserOrganizations(userId: string): Promise<Organization[]> {
