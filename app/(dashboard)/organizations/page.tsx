@@ -23,7 +23,7 @@ export default async function Organizations() {
             {members.map((member, index) => (
               <tr key={index} className="hover:bg-gray-50">
                 <td className="py-3 px-4 text-gray-800">{member.nombre_usuario}</td>
-                <td className="py-3 px-4 text-gray-800">{member.username}</td>
+                <td className="py-3 px-4 text-gray-800">{member.usuario}</td>
                 <td className="py-3 px-4 text-gray-800">{member.nombre_organizacion}</td>
                 <td className="py-3 px-4 text-gray-800">{member.rol}</td>
               </tr>

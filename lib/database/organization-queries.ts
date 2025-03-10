@@ -18,7 +18,7 @@ interface Organization {
 
 export interface UserOrganization {
   nombre_usuario: string;
-  username: string;
+  usuario: string;
   nombre_organizacion: string;
   rol: string;
 } //TODO Corregir nombres
@@ -69,7 +69,7 @@ export async function getOrganizationMembers(): Promise<UserOrganization[]>{
   const queryText = `
     SELECT 
         u.name AS nombre_usuario,
-        u.username,
+        u.username AS usuario,
         o.name AS nombre_organizacion,
         m.role AS rol
     FROM 
