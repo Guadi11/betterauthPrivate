@@ -59,7 +59,7 @@ export async function getOrganizationMembersByOrganizationId(organizationId: str
 
 // Obtener el rol de un usuario en una organización
 export async function getUserRoleInOrganization(userId: string, organizationId: string): Promise<string | null> {
-  const queryText = 'SELECT role FROM member WHERE userId = $1 AND organizationId = $2';
+  const queryText = 'SELECT role FROM member WHERE "userId" = $1 AND "organizationId" = $2';
   const result = await query(queryText, [userId, organizationId]);
   
   return result.rows.length > 0 ? result.rows[0].role : null;
