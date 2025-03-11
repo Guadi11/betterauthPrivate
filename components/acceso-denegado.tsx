@@ -1,6 +1,6 @@
 export default function AccesoDenegado(){
   return (
-    <div className="max-w-md w-full mx-auto border border-gray-200 rounded-lg p-6 flex flex-col items-center text-center">
+    <div className="max-w-md w-full mx-auto my-5 border border-gray-200 rounded-lg p-6 flex flex-col items-center text-center">
       <div className="bg-red-100 rounded-full p-3 mb-4">
         {/* Lock icon SVG */}
         <svg
