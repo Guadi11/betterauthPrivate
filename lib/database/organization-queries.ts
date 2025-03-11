@@ -28,8 +28,8 @@ export async function getUserOrganizations(userId: string): Promise<Organization
   const queryText = `
     SELECT o.* 
     FROM organization o
-    JOIN member m ON o.id = m.organizationId
-    WHERE m.userId = $1
+    JOIN member m ON o.id = m."organizationId"
+    WHERE m."userId" = $1
   `;
   
   const result = await query(queryText, [userId]);
@@ -49,7 +49,7 @@ export async function getOrganizationMembersByOrganizationId(organizationId: str
   const queryText = `
     SELECT u.* 
     FROM "user" u
-    JOIN member m ON u.id = m.userId
+    JOIN member m ON u.id = m."userId"
     WHERE m.organizationId = $1
   `;
   
