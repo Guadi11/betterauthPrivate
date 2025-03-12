@@ -1,6 +1,5 @@
 import { checkOrganizationAccess } from "@/lib/organization-acces";
 import Link from "next/link";
-import AccesoDenegado from "./acceso-denegado";
 
 export default async function IngresosButton(){
     const organizationId = "ibQ6dYjZhckwvZTA2ZqJpmdx1FhoUEgE"
