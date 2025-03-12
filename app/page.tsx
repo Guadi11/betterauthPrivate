@@ -1,5 +1,5 @@
-import IngresosButton from "@/components/ingresos-button";
-import OrganizationButton from "@/components/organizations-button";
+import IngresosButton from "@/components/PEN/ingresos-button";
+import OrganizationButton from "@/components/Vinculaciones/organizations-button";
 import SessionCard from "@/components/session-card-sv";
 import SignInButton from "@/components/sign-in-button";
 import SignOutButton from "@/components/sign-out-button";
