@@ -13,6 +13,14 @@ export async function checkOrganizationAccess(options: AuthorizationOptions) {
     const reqHeaders = await headers();
     const session = await auth.api.getSession({ headers: reqHeaders });
 
+    // Si no hay sesión, no está autorizado
+    if (!session) {
+      return { 
+        authorized: false, 
+        reason: "No hay sesión activa" 
+      };
+    }
+
     // Verificar rol en la organización
     const userRole = await getUserRoleInOrganization(session.user.id, options.organizationId);
 
