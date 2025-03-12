@@ -1,8 +1,9 @@
-import { checkOrganizationAccess } from "@/lib/organization-acces";
+import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
+import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 import Link from "next/link";
 
 export default async function IngresosButton(){
-    const organizationId = "ibQ6dYjZhckwvZTA2ZqJpmdx1FhoUEgE"
+    const organizationId = ORGANIZATION_IDS.PERSONAL_ESTABLECIMIENTOS_NAVALES;
 
     const accessResult = await checkOrganizationAccess({ organizationId });
 
