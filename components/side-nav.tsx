@@ -1,62 +1,26 @@
-import { useEffect, useState } from 'react';
+import Link from "next/link";
+import Image from 'next/image';
 
-interface SideNavProps {
-  children?: React.ReactNode;
-}
-
-export default function SideNav({ children }: SideNavProps) {
-  
-
-  return (
-    <div className="sidenav">
-      <div className="sidenav-header">
-        <h1 className="app-title">Contra Inteligencia</h1>
-        {userName && (
-          <div className="user-info">
-            <span>Bienvenido, {userName}</span>
-          </div>
-        )}
+export default function Sidebar() {
+    return (
+      <div className="bg-white h-screen w-64 border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="bg-black text-white p-2 rounded flex items-center justify-center">
+                <Image 
+                src="/shield-user.svg" 
+                alt="CI Logo" 
+                width={20} 
+                height={20} 
+                />
+            </div>
+            <span className="font-medium text-gray-800">Contra Inteligencia</span>
+          </Link>
+        </div>
+        
+        <nav className="flex-1 py-4 px-2 space-y-1">
+          
+        </nav>
       </div>
-      <div className="sidenav-content">
-        {children}
-      </div>
-      
-      <style jsx>{`
-        .sidenav {
-          width: 250px;
-          height: 100vh;
-          background-color: #1a1a2e;
-          color: #ffffff;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-        }
-        
-        .sidenav-header {
-          padding: 20px 15px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          margin-bottom: 20px;
-        }
-        
-        .app-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin: 0 0 15px 0;
-          color: #ffffff;
-        }
-        
-        .user-info {
-          font-size: 0.9rem;
-          opacity: 0.8;
-          padding-bottom: 5px;
-        }
-        
-        .sidenav-content {
-          flex: 1;
-          padding: 0 15px;
-          overflow-y: auto;
-        }
-      `}</style>
-    </div>
-  );
-}
+    );
+  }
