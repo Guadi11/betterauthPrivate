@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function SignInForm() {
       } else {
         alert("Inicio de sesión exitoso.");
         router.push("/"); // Redirigir después del login
+        router.refresh(); // Recargar pagina principal asi se muestra la sidenav
       }
     } catch (err) {
       console.error("Error en el inicio de sesión:", err);
