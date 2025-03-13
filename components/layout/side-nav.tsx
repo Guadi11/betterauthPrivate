@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from 'next/image';
+import SignOutButton from "../sign-out-button";
 
 export default function Sidebar() {
     return (
@@ -21,6 +22,9 @@ export default function Sidebar() {
         <nav className="flex-1 py-4 px-2 space-y-1">
           
         </nav>
+   
+        <SignOutButton/>
+        
       </div>
     );
   }
