@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6 space-y-4">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">LANDING PAGE BetterAuth Project</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Proyecto Cargo Contra Inteligencia</h1>
         
         <SessionCard/>
         
