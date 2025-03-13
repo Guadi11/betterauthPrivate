@@ -22,9 +22,10 @@ export default function Sidebar() {
         <nav className="flex-1 py-4 px-2 space-y-1">
           
         </nav>
-   
+
+        <div className="p-4 flex justify-center">
         <SignOutButton/>
-        
+        </div>
       </div>
     );
   }
