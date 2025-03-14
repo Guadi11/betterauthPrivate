@@ -1,5 +1,3 @@
-import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
-import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 import Link from "next/link";
 
 export default async function RegistrosButton(){
