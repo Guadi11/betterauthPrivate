@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from 'next/image';
 import SignOutButton from "../sign-out-button";
 import BotonesPENLayout from "../PEN/layout-botones-pen";
+import BotonesVinculacionesLayout from "../Vinculaciones/layout-botones-vinculaciones";
 
 export default function Sidebar() {
     return (
@@ -22,6 +23,7 @@ export default function Sidebar() {
         
         <nav className="flex-1 py-4 px-2 space-y-5">
           <BotonesPENLayout/>
+          <BotonesVinculacionesLayout/>
         </nav>
 
         <div className="p-4 flex justify-center">
