@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from 'next/image';
 import SignOutButton from "../sign-out-button";
+import BotonesPENLayout from "../PEN/layout-botones-pen";
 
 export default function Sidebar() {
     return (
@@ -19,8 +20,8 @@ export default function Sidebar() {
           </Link>
         </div>
         
-        <nav className="flex-1 py-4 px-2 space-y-1">
-          
+        <nav className="flex-1 py-4 px-2 space-y-5">
+          <BotonesPENLayout/>
         </nav>
 
         <div className="p-4 flex justify-center">
