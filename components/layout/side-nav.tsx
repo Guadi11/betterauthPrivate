@@ -3,6 +3,7 @@ import Image from 'next/image';
 import SignOutButton from "../sign-out-button";
 import BotonesPENLayout from "../PEN/layout-botones-pen";
 import BotonesVinculacionesLayout from "../Vinculaciones/layout-botones-vinculaciones";
+import BotonesCivilLayout from "../Civil/layout-botones-civil";
 
 export default function Sidebar() {
     return (
@@ -24,6 +25,7 @@ export default function Sidebar() {
         <nav className="flex-1 py-4 px-2 space-y-5">
           <BotonesPENLayout/>
           <BotonesVinculacionesLayout/>
+          <BotonesCivilLayout/>
         </nav>
 
         <div className="p-4 flex justify-center">
