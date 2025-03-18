@@ -1,6 +1,6 @@
 import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
-import RegistrosButton from "./registrar-ingreso-button";
-import IngresosButton from "./ver-ingresos-button";
+import RegistrosButton from "@/components/ingresos/registrar-ingreso-button";
+import IngresosButton from "@/components/ingresos/ver-ingresos-button";
 import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
 
 export default async function BotonesPENLayout(){
