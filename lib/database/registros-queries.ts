@@ -13,16 +13,59 @@ export interface Registro {
   referido_cc?: boolean;
 }
 
-// Obtener todos los registros
-export async function getAllRegistros(): Promise<Registro[]> {
+/**
+ * Obtiene todos los registros de la base de datos
+ */
+export async function obtenerTodosLosRegistros(): Promise<Registro[]> {
   const queryText = 'SELECT * FROM registro ORDER BY apellido, nombre';
   
   const result = await query(queryText);
   return result.rows;
 }
 
+/**
+ * Obtiene registros con paginación
+ * @param page Número de página (comienza en 1)
+ * @param limit Límite de registros por página
+ */
+export async function obtenerTodosLosRegistrosPaginado(page: number = 1, pageSize: number = 10): Promise<{
+    registros: Registro[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
+    const offset = (page - 1) * pageSize;
+    
+    // Consulta para obtener los registros paginados
+    const queryText = `
+      SELECT * FROM registro 
+      ORDER BY apellido, nombre
+      LIMIT $1 OFFSET $2
+    `;
+    
+    // Consulta para obtener el total de registros
+    const countQuery = 'SELECT COUNT(*) FROM registro';
+    
+    // Ejecutar ambas consultas
+    const [registrosResult, countResult] = await Promise.all([
+      query(queryText, [pageSize, offset]),
+      query(countQuery)
+    ]);
+    
+    const total = parseInt(countResult.rows[0].count);
+    
+    return {
+      registros: registrosResult.rows,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize)
+    };
+  }
+
 // Buscar registro por documento
-export async function getRegistroByDocumento(documento: string): Promise<Registro | null> {
+export async function obtenerRegistroPorDocumento(documento: string): Promise<Registro | null> {
   const queryText = 'SELECT * FROM registro WHERE documento = $1';
   
   const result = await query(queryText, [documento]);
@@ -30,7 +73,7 @@ export async function getRegistroByDocumento(documento: string): Promise<Registr
 }
 
 // Buscar registros por nombre o apellido (parcial)
-export async function searchRegistros(searchTerm: string): Promise<Registro[]> {
+export async function buscarRegistros(searchTerm: string): Promise<Registro[]> {
   const queryText = `
     SELECT * FROM registro 
     WHERE 
@@ -44,7 +87,7 @@ export async function searchRegistros(searchTerm: string): Promise<Registro[]> {
 }
 
 // Insertar un nuevo registro
-export async function createRegistro(registro: Omit<Registro, 'referido_cc'> & { referido_cc?: boolean }): Promise<Registro> {
+export async function crearRegistro(registro: Omit<Registro, 'referido_cc'> & { referido_cc?: boolean }): Promise<Registro> {
   const queryText = `
     INSERT INTO registro (
       documento, 
@@ -76,36 +119,52 @@ export async function createRegistro(registro: Omit<Registro, 'referido_cc'> & {
   return result.rows[0];
 }
 
-// Actualizar un registro existente
-export async function updateRegistro(documento: string, registro: Partial<Registro>): Promise<Registro | null> {
-  const updateFields = Object.keys(registro)
-    .filter(key => registro[key] !== undefined)
-    .map((key, index) => `${key} = $${index + 2}`);
+/**
+ * Actualiza un registro existente
+ * @param documento Documento del registro a actualizar
+ * @param registro Nuevos datos del registro
+ */
+export async function actualizarRegistro(documento: string, registro: Partial<Registro>): Promise<Registro | null> {
+  // Construimos la query dinámicamente basada en los campos proporcionados
+  const setClauses = [];
+  const values = [];
+  let paramIndex = 1;
   
-  if (updateFields.length === 0) {
+  // Agregamos todos los campos que se desean actualizar
+  for (const [key, value] of Object.entries(registro)) {
+    if (key !== 'documento') { // No permitimos actualizar el documento ya que es PK
+      setClauses.push(`${key} = $${paramIndex}`);
+      values.push(value);
+      paramIndex++;
+    }
+  }
+  
+  // Si no hay campos para actualizar, retornamos null
+  if (setClauses.length === 0) {
     return null;
   }
   
+  // Agregamos el documento como último parámetro para la cláusula WHERE
+  values.push(documento);
+  
   const queryText = `
     UPDATE registro 
-    SET ${updateFields.join(', ')}
-    WHERE documento = $1
+    SET ${setClauses.join(', ')} 
+    WHERE documento = $${paramIndex}
     RETURNING *
   `;
-  
-  const values = [
-    documento,
-    ...Object.values(registro).filter(value => value !== undefined)
-  ];
   
   const result = await query(queryText, values);
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
-// Eliminar un registro
-export async function deleteRegistro(documento: string): Promise<boolean> {
-  const queryText = 'DELETE FROM registro WHERE documento = $1';
-  
+/**
+ * Elimina un registro por su documento
+ * @param documento Documento del registro a eliminar
+ */
+export async function eliminarRegistro(documento: string): Promise<boolean> {
+  const queryText = 'DELETE FROM registro WHERE documento = $1 RETURNING documento';
   const result = await query(queryText, [documento]);
-  return result.rowCount > 0;
+  
+  return result.rows.length > 0;
 }
