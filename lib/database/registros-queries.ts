@@ -87,7 +87,7 @@ export async function buscarRegistros(searchTerm: string): Promise<Registro[]> {
 }
 
 // Insertar un nuevo registro
-export async function crearRegistro(registro: Omit<Registro, 'referido_cc'> & { referido_cc?: boolean }): Promise<Registro> {
+export async function insertarRegistro(registro: Omit<Registro, 'referido_cc'> & { referido_cc?: boolean }): Promise<Registro> {
   const queryText = `
     INSERT INTO registro (
       documento, 

@@ -22,6 +22,8 @@ import {
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
+import { crearRegistro } from "@/lib/database/registro-actions"
+
 
 export const RegistroSchema = z.object({
     documento: z.string()
@@ -87,9 +89,22 @@ export default function RegistroForm(){
     //console.log("Form values:", form.watch());
 
     //2. Definir el handler 
-    function onSubmit(values: z.infer<typeof RegistroSchema>){
-        console.log("hola");
-        console.log("Valores del formulario:", values);
+    async function onSubmit(values: z.infer<typeof RegistroSchema>) {
+      try {
+        console.log("Enviando datos...", values);
+        
+        // Llamar a la server action
+      const result = await crearRegistro(values);
+        
+        if (result) {
+          console.log("Registro creado con éxito:", result);
+          form.reset();
+        } else {
+          console.error("Error al crear el registro:", result);
+        }
+      } catch (error) {
+        console.error("Error al enviar el formulario:", error);
+      }
     }
     
     return(
