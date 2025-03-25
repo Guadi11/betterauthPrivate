@@ -3,6 +3,7 @@ import OrganizationButton from "@/components/Vinculaciones/organizations-button"
 import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
 import SignUpButton from "@/components/sign-up";
 import PanelRegistrosButton from "@/components/registros/panel-registros-button";
+import BotonCrearRegistro from "../registros/boton-crear-registro";
 
 export default async function BotonesVinculacionesLayout(){
     const organizationId = ORGANIZATION_IDS.PERSONAL_VINCULACIONES;
@@ -18,6 +19,7 @@ export default async function BotonesVinculacionesLayout(){
             <OrganizationButton/>
             <SignUpButton />
             <PanelRegistrosButton/>
+            <BotonCrearRegistro/>
         </div>
     );
 }
