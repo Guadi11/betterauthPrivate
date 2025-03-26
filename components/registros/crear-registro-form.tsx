@@ -189,21 +189,15 @@ export default function RegistroForm(){
                 <FormItem>
                   <FormLabel>Fecha de Nacimiento</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="date" 
-                      {...field} 
-                      onChange={(e) => {
-                        // Si hay un valor, crear una fecha ajustada a la zona horaria local
-                        if (e.target.value) {
-                          const [year, month, day] = e.target.value.split('-');
-                          const date = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0);
-                          field.onChange(date);
-                        } else {
-                          field.onChange(undefined);
-                        }
-                      }}
-                      value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                    />
+                  <Input 
+                    type="date" 
+                    {...field} 
+                    value={field.value ? field.value.toISOString().split('T')[0] : ''} 
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined;
+                      field.onChange(date);
+                    }}
+                  />
                   </FormControl>
                   <FormDescription>
                     Ingrese su fecha de nacimiento
