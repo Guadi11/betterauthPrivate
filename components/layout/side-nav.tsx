@@ -4,6 +4,7 @@ import SignOutButton from "../sign-out-button";
 import BotonesPENLayout from "../PEN/layout-botones-pen";
 import BotonesVinculacionesLayout from "../Vinculaciones/layout-botones-vinculaciones";
 import BotonesCivilLayout from "../Civil/layout-botones-civil";
+import UserCard from "./user-card";
 
 export default function Sidebar() {
     return (
@@ -28,7 +29,8 @@ export default function Sidebar() {
           <BotonesCivilLayout/>
         </nav>
 
-        <div className="p-4 flex justify-center">
+        <div className="p-4 flex flex-col items-center space-y-4">
+        <UserCard/>
         <SignOutButton/>
         </div>
       </div>
