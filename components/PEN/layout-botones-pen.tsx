@@ -13,7 +13,7 @@ export default async function BotonesPENLayout(){
     }
 
     return(
-        <div>
+        <div className="flex-1 space-y-3">
             <IngresosButton/>
             <RegistrosButton/>
         </div>

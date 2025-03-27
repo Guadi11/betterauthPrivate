@@ -14,7 +14,7 @@ export default async function BotonesVinculacionesLayout(){
     }
 
     return (
-        <div>
+        <div className="flex-1 space-y-3">
             <OrganizationButton/>
             <SignUpButton />
             <PanelRegistrosButton/>

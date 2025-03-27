@@ -25,7 +25,7 @@ export default function Sidebar() {
         </div>
         
         {/*Primero los botones que pueden acceder todos, despues los layouts de botones para cada oficina*/}
-        <nav className="flex-1 py-4 px-2 space-y-5">
+        <nav className="flex-1 py-4 px-2 space-y-3">
           <BotonCrearRegistro/>
           <BotonesPENLayout/>
           <BotonesVinculacionesLayout/>

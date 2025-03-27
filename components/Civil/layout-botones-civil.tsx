@@ -12,7 +12,7 @@ export default async function BotonesCivilLayout(){
     }
 
     return (
-        <div>
+        <div className="flex-1 space-y-3">
             <ConfeccionarPATBoton/>            
         </div>
     );
