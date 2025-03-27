@@ -5,6 +5,7 @@ import BotonesPENLayout from "../PEN/layout-botones-pen";
 import BotonesVinculacionesLayout from "../Vinculaciones/layout-botones-vinculaciones";
 import BotonesCivilLayout from "../Civil/layout-botones-civil";
 import UserCard from "./user-card";
+import BotonCrearRegistro from "@/components/registros/boton-crear-registro";
 
 export default function Sidebar() {
     return (
@@ -23,7 +24,9 @@ export default function Sidebar() {
           </Link>
         </div>
         
+        {/*Primero los botones que pueden acceder todos, despues los layouts de botones para cada oficina*/}
         <nav className="flex-1 py-4 px-2 space-y-5">
+          <BotonCrearRegistro/>
           <BotonesPENLayout/>
           <BotonesVinculacionesLayout/>
           <BotonesCivilLayout/>
