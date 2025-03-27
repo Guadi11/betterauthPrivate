@@ -1,11 +1,11 @@
+import { IdCard } from "lucide-react";
 import Link from "next/link";
+import { buttonVariants } from "../ui/button";
 
 export default function ConfeccionarPATBoton(){
     return (
-        <Link href="/confeccionar_pat">
-            <button className="mb-4 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
-                Confeccionar PAT
-            </button>
+        <Link href="/confeccionar_pat" className={buttonVariants({variant: "default-pat", size: "sidenav"})}>
+            <IdCard/>Confeccionar PAT
         </Link>
     );
 }
