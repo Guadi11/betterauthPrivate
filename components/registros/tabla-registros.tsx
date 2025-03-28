@@ -1,4 +1,5 @@
 import { Registro } from '@/lib/database/registros-queries';
+import Link from 'next/link';
 
 interface RegistrosTableProps {
   initialData: Registro[];
@@ -15,6 +16,7 @@ export default function RegistrosTable({
         <table className="w-full border-collapse border">
           <thead className="bg-gray-100">
             <tr>
+              <th className="border p-2">Acciones</th>
               <th className="border p-2">Documento</th>
               <th className="border p-2">Tipo Doc</th>
               <th className="border p-2">Nombre</th>
@@ -26,6 +28,9 @@ export default function RegistrosTable({
           <tbody>
             {initialData.map((registro) => (
               <tr key={registro.documento} className="hover:bg-gray-50">
+                <td className="border p-2">
+                  <Link href={"/registro/"+registro.documento}>Acceder</Link>
+                </td>
                 <td className="border p-2">{registro.documento}</td>
                 <td className="border p-2">{registro.tipo_documento}</td>
                 <td className="border p-2">{registro.nombre}</td>

@@ -72,17 +72,21 @@ export async function obtenerRegistroPorDocumento(documento: string): Promise<Re
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 
-// Buscar registros por nombre o apellido (parcial)
-export async function buscarRegistros(searchTerm: string): Promise<Registro[]> {
+/**
+ * Busca registros por nombre, apellido o documento
+ * @param texto Texto a buscar en nombre, apellido o documento
+ */
+export async function buscarRegistrosPorNombreOApellido(texto: string): Promise<Registro[]> {
   const queryText = `
     SELECT * FROM registro 
     WHERE 
       LOWER(nombre) LIKE LOWER($1) OR 
-      LOWER(apellido) LIKE LOWER($1)
+      LOWER(apellido) LIKE LOWER($1) OR 
+      documento = $1 
     ORDER BY apellido, nombre
   `;
+  const result = await query(queryText, [`%${texto}%`]);
   
-  const result = await query(queryText, [`%${searchTerm}%`]);
   return result.rows;
 }
 
