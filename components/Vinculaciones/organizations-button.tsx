@@ -1,11 +1,10 @@
 import Link from "next/link";
+import { buttonVariants } from "../ui/button";
 
 export default function OrganizationButton(){
     return(
-              <Link href="/organizations">
-                <button className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+              <Link href="/organizations" className={buttonVariants({variant:'default', size: 'sidenav'})}>
                   Ir a Organizaciontes
-                </button>
               </Link>
     );
 }

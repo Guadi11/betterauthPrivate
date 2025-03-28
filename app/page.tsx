@@ -3,7 +3,7 @@ import OrganizationButton from "@/components/Vinculaciones/organizations-button"
 import SessionCard from "@/components/session-card-sv";
 import SignInButton from "@/components/sign-in-button";
 import SignOutButton from "@/components/sign-out-button";
-import SignUpButton from "@/components/sign-up";
+import SignUpButton from "@/components/sign-up-button";
 
 export default function Home() {
   return (

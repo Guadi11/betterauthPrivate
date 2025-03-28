@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "./ui/button";
 
 export default function SignOutButton() {
   const router = useRouter();
@@ -24,12 +25,13 @@ export default function SignOutButton() {
   };
 
   return (
-    <button 
+    <Button 
+      variant={'destructive'}
+      size={'sidenav'}
       onClick={handleSignOut} 
       disabled={isSigningOut}
-      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 w-full"
     >
       {isSigningOut ? "Cerrando sesión..." : "Cerrar Sesión"}
-    </button>
+    </Button>
   );
 }
