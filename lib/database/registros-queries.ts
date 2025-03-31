@@ -1,4 +1,5 @@
 import { query } from '@/lib/database/db';
+import { unstable_noStore as noStore } from 'next/cache';
 
 // Interfaz para el tipo de Registro
 export interface Registro {
@@ -21,6 +22,39 @@ export async function obtenerTodosLosRegistros(): Promise<Registro[]> {
   
   const result = await query(queryText);
   return result.rows;
+}
+
+/**
+ * Obtiene registros filtrados con paginación
+ * @consulta texto con el cual se busca en la bdd
+ * @currentPage pagina actual
+ */
+const ITEMS_POR_PAGINA = 6;
+export async function obtenerRegistrosFiltradosPaginado(
+  consulta: string,
+  currentPage: number,
+){
+  noStore();
+  const offset = (currentPage - 1) * ITEMS_POR_PAGINA;
+
+  try{
+    const queryText = `
+      SELECT * FROM registro 
+      WHERE 
+        LOWER(nombre) LIKE LOWER($1) OR 
+        LOWER(apellido) LIKE LOWER($1) OR 
+        documento = $1 
+      ORDER BY apellido, nombre
+      LIMIT ${ITEMS_POR_PAGINA} OFFSET ${offset}
+    `;
+
+    const registros = await query(queryText, [`%${consulta}%`]);
+    return registros.rows;
+  } catch(error){
+    console.error('Error en la Base de Datos:',error);
+    throw new Error('Error al buscar registros.');
+  }
+
 }
 
 /**
@@ -76,7 +110,7 @@ export async function obtenerRegistroPorDocumento(documento: string): Promise<Re
  * Busca registros por nombre, apellido o documento
  * @param texto Texto a buscar en nombre, apellido o documento
  */
-export async function buscarRegistrosPorNombreOApellido(texto: string): Promise<Registro[]> {
+export async function buscarRegistrosPorNombreApellidoDocumento(texto: string): Promise<Registro[]> {
   const queryText = `
     SELECT * FROM registro 
     WHERE 
