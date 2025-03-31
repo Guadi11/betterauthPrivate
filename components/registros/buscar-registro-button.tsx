@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function BotonBuscarRegistro(){
     return(
-        <Link href="/buscar" className={buttonVariants({variant:'default', size:'sidenav'})}>
+        <Link href="/buscar_registro" className={buttonVariants({variant:'default', size:'sidenav'})}>
             <UserSearch/> Buscar Registro
         </Link>
     )

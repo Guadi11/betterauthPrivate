@@ -7,7 +7,7 @@ import BotonesCivilLayout from "../Civil/layout-botones-civil";
 import UserCard from "./user-card";
 import BotonCrearRegistro from "@/components/registros/boton-crear-registro";
 import ListadoRegistrosButton from "@/components/registros/listado-registros-button";
-import BotonBuscarRegistro from "@/components/buscar-registro-button";
+import BotonBuscarRegistro from "@/components/registros/buscar-registro-button";
 
 export default function Sidebar() {
     return (
