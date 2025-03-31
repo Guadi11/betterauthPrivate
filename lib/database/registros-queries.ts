@@ -33,28 +33,27 @@ const ITEMS_POR_PAGINA = 6;
 export async function obtenerRegistrosFiltradosPaginado(
   consulta: string,
   currentPage: number,
-){
+) {
   noStore();
   const offset = (currentPage - 1) * ITEMS_POR_PAGINA;
-
-  try{
+  
+  try {
     const queryText = `
-      SELECT * FROM registro 
-      WHERE 
-        LOWER(nombre) LIKE LOWER($1) OR 
-        LOWER(apellido) LIKE LOWER($1) OR 
-        documento = $1 
+      SELECT * FROM registro
+      WHERE
+        LOWER(nombre) LIKE LOWER($1) OR
+        LOWER(apellido) LIKE LOWER($1) OR
+        documento = $2
       ORDER BY apellido, nombre
       LIMIT ${ITEMS_POR_PAGINA} OFFSET ${offset}
     `;
-
-    const registros = await query(queryText, [`%${consulta}%`]);
+    
+    const registros = await query(queryText, [`%${consulta}%`, consulta]);
     return registros.rows;
-  } catch(error){
-    console.error('Error en la Base de Datos:',error);
+  } catch (error) {
+    console.error('Error en la Base de Datos:', error);
     throw new Error('Error al buscar registros.');
   }
-
 }
 
 /**
