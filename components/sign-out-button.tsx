@@ -4,6 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { LogOut } from "lucide-react";
 
 export default function SignOutButton() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function SignOutButton() {
       onClick={handleSignOut} 
       disabled={isSigningOut}
     >
+      <LogOut/>
       {isSigningOut ? "Cerrando sesión..." : "Cerrar Sesión"}
     </Button>
   );
