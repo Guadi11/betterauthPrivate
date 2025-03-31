@@ -1,4 +1,5 @@
 import { obtenerRegistrosFiltradosPaginado } from "@/lib/database/registros-queries";
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default async function RegistrosTable({
     query,
@@ -49,17 +50,11 @@ export default async function RegistrosTable({
                             {/* Aquí puedes agregar botones de acción como en el ejemplo original */}
                             <button className="rounded-md border p-2 hover:bg-gray-100">
                             <span className="sr-only">Editar</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-4 w-4 text-gray-500">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-                            </svg>
+                            <Pencil className="h-4 w-4 text-gray-500" />
                             </button>
                             <button className="rounded-md border p-2 hover:bg-gray-100">
                             <span className="sr-only">Eliminar</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-4 w-4 text-gray-500">
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                            </svg>
+                            <Trash2 className="h-4 w-4 text-gray-500" />
                             </button>
                         </div>
                         </div>
@@ -133,17 +128,11 @@ export default async function RegistrosTable({
                             {/* Botones de acción */}
                             <button className="rounded-md border p-2 hover:bg-gray-100">
                                 <span className="sr-only">Editar</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-4 w-4 text-gray-500">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-                                </svg>
+                                <Pencil className="h-4 w-4 text-gray-500" />
                             </button>
                             <button className="rounded-md border p-2 hover:bg-gray-100">
                                 <span className="sr-only">Eliminar</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="h-4 w-4 text-gray-500">
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                </svg>
+                                <Trash2 className="h-4 w-4 text-gray-500" />
                             </button>
                             </div>
                         </td>
