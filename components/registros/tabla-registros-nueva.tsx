@@ -1,5 +1,6 @@
 import { obtenerRegistrosFiltradosPaginado } from "@/lib/database/registros-queries";
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, UserRound } from 'lucide-react';
+import Link from "next/link";
 
 export default async function RegistrosTable({
     query,
@@ -14,6 +15,7 @@ export default async function RegistrosTable({
         <div className="mt-6 flow-root">
             <div className="inline-block min-w-full align-middle">
                 <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+                {/*Version Mobile*/}
                 <div className="md:hidden">
                     {registros?.map((registro) => (
                     <div
@@ -47,20 +49,33 @@ export default async function RegistrosTable({
                             </p>
                         </div>
                         <div className="flex justify-end gap-2">
-                            {/* Aquí puedes agregar botones de acción como en el ejemplo original */}
-                            <button className="rounded-md border p-2 hover:bg-gray-100">
-                            <span className="sr-only">Editar</span>
-                            <Pencil className="h-4 w-4 text-gray-500" />
-                            </button>
-                            <button className="rounded-md border p-2 hover:bg-gray-100">
-                            <span className="sr-only">Eliminar</span>
-                            <Trash2 className="h-4 w-4 text-gray-500" />
-                            </button>
+                            {/* Acceder */}
+                            <Link
+                                href={`/registro/${registro.documento}`}
+                                className="group relative rounded-md border p-2 hover:bg-gray-100"
+                            >
+                                <UserRound className="h-4 w-4 text-gray-500" />
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 transform rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100">
+                                Acceder
+                                </span>
+                            </Link>
+
+                            {/* Editar */}
+                            <Link
+                                href={`/registro/${registro.documento}/editar`}
+                                className="group relative rounded-md border p-2 hover:bg-gray-100"
+                            >
+                                <Pencil className="h-4 w-4 text-gray-500" />
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 transform rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100">
+                                Editar
+                                </span>
+                            </Link>
                         </div>
                         </div>
                     </div>
                     ))}
                 </div>
+                {/*Version de Escritorio*/}
                 <table className="hidden min-w-full text-gray-900 md:table">
                     <thead className="rounded-lg text-left text-sm font-normal">
                     <tr>
@@ -82,8 +97,8 @@ export default async function RegistrosTable({
                         <th scope="col" className="px-3 py-5 font-medium">
                         Referido CC
                         </th>
-                        <th scope="col" className="relative py-3 pl-6 pr-3">
-                        <span className="sr-only">Acciones</span>
+                        <th scope="col" className="px-3 py-5 font-medium text-center">
+                        Acciones
                         </th>
                     </tr>
                     </thead>
@@ -123,17 +138,30 @@ export default async function RegistrosTable({
                             </span>
                             )}
                         </td>
-                        <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                            <div className="flex justify-end gap-3">
-                            {/* Botones de acción */}
-                            <button className="rounded-md border p-2 hover:bg-gray-100">
-                                <span className="sr-only">Editar</span>
+                        <td className="whitespace-nowrap px-3 py-3 text-center align-middle">
+                            <div className="inline-flex items-center justify-center gap-2">
+                                {/* Botones de acción */}
+                                {/* Acceder */}
+                                <Link
+                                href={`/registro/${registro.documento}`}
+                                className="group relative rounded-md border p-2 hover:bg-gray-100"
+                                >
+                                <UserRound className="h-4 w-4 text-gray-500" />
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 transform rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100">
+                                    Acceder
+                                </span>
+                                </Link>
+
+                                {/* Editar */}
+                                <Link
+                                href={`/registro/${registro.documento}/editar`}
+                                className="group relative rounded-md border p-2 hover:bg-gray-100"
+                                >
                                 <Pencil className="h-4 w-4 text-gray-500" />
-                            </button>
-                            <button className="rounded-md border p-2 hover:bg-gray-100">
-                                <span className="sr-only">Eliminar</span>
-                                <Trash2 className="h-4 w-4 text-gray-500" />
-                            </button>
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 transform rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100">
+                                    Editar
+                                </span>
+                                </Link>
                             </div>
                         </td>
                         </tr>
