@@ -56,6 +56,27 @@ export async function obtenerRegistrosFiltradosPaginado(
   }
 }
 
+export async function obtenerPaginasRegistrosFiltrados(consulta: string){
+  noStore();
+  try{
+    const queryText =`
+      SELECT COUNT(*)
+      FROM registro
+      WHERE
+        LOWER(nombre) LIKE LOWER($1) OR
+        LOWER(apellido) LIKE LOWER($1) OR
+        documento = $2
+    `;
+
+    const count = await query(queryText, [`%${consulta}%`, consulta]);
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_POR_PAGINA);
+    return totalPages;
+  } catch(error){
+    console.error('Database Error: ', error);
+    throw new Error('error al obtener el total de paginas de registros');
+  }
+}
+
 /**
  * Obtiene registros con paginación
  * @param page Número de página (comienza en 1)
