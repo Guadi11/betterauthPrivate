@@ -1,8 +1,9 @@
 import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
 import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 import ConfeccionarPATBoton from "./confeccionar-PAT-boton";
+import EditarDiseñoPatBoton from "./editar-diseño-pat-boton";
 
-export default async function BotonesCivilLayout(){
+export default async function BotonesPasesLayout(){
     const organizationId = ORGANIZATION_IDS.PERSONAL_CIVIL;
     
     const accessResult = await checkOrganizationAccess({ organizationId });
@@ -13,7 +14,8 @@ export default async function BotonesCivilLayout(){
 
     return (
         <div className="flex-1 space-y-3">
-            <ConfeccionarPATBoton/>            
+            <ConfeccionarPATBoton/>
+            <EditarDiseñoPatBoton/>       
         </div>
     );
 }

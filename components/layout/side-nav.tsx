@@ -3,7 +3,7 @@ import Image from 'next/image';
 import SignOutButton from "../sign-out-button";
 import BotonesPENLayout from "../PEN/layout-botones-pen";
 import BotonesVinculacionesLayout from "../Vinculaciones/layout-botones-vinculaciones";
-import BotonesCivilLayout from "../Civil/layout-botones-civil";
+import BotonesPasesLayout from "../Pases/layout-botones-pases";
 import UserCard from "./user-card";
 import BotonCrearRegistro from "@/components/registros/boton-crear-registro";
 import ListadoRegistrosButton from "@/components/registros/listado-registros-button";
@@ -33,7 +33,7 @@ export default function Sidebar() {
           <ListadoRegistrosButton/>
           <BotonesPENLayout/>
           <BotonesVinculacionesLayout/>
-          <BotonesCivilLayout/>
+          <BotonesPasesLayout/>
         </nav>
 
         <div className="p-4 flex flex-col items-center space-y-4">
