@@ -4,7 +4,7 @@ import ConfeccionarPATBoton from "./confeccionar-PAT-boton";
 import EditarDiseñoPatBoton from "./editar-diseño-pat-boton";
 
 export default async function BotonesPasesLayout(){
-    const organizationId = ORGANIZATION_IDS.PERSONAL_CIVIL;
+    const organizationId = ORGANIZATION_IDS.PERSONAL_PASES;
     
     const accessResult = await checkOrganizationAccess({ organizationId });
     
