@@ -13,6 +13,9 @@ export async function query(text: string, params?: unknown[]){
     const client = await pool.connect();
     try{
         return await client.query(text,params);
+    }catch (error) {
+        console.error("Error en la consulta SQL:", { text, params, error });
+        throw error; // se relanza para que el script que la usa lo maneje
     }finally{
         client.release();
     }
