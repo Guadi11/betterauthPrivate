@@ -1,3 +1,4 @@
+import { Ingreso, obtenerIngresosPorDocumento } from "@/lib/database/ingreso-queries";
 import { obtenerRegistroPorDocumento, Registro } from "@/lib/database/registros-queries";
 
 export default async function PaginaRegistro({ params }: { params: { documento: string } }) {
@@ -9,7 +10,9 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
     return <div>No se encontró el registro con el documento {documento}</div>;
   }
 
-  return (
+  const ingresos : Ingreso[] | null = await obtenerIngresosPorDocumento(documento);
+  console.log(ingresos);
+  return (<>
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Datos del Registro</h1>
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -56,5 +59,47 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
         </div>
       </div>
     </div>
-  );
+
+    <div className="mt-8">
+    <h2 className="text-xl font-semibold mb-4">Historial de Ingresos</h2>
+
+    {ingresos && ingresos.length > 0 ? (
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Fecha Ingreso</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Fecha Egreso</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Lugar</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Motivo</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Tarjeta</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {ingresos.map((ingreso) => (
+              <tr key={ingreso.id_ingreso}>
+                <td className="px-4 py-2 text-sm text-gray-900">
+                  {new Date(ingreso.fecha_ingreso).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 text-sm text-gray-900">
+                  {ingreso.fecha_egreso
+                    ? new Date(ingreso.fecha_egreso).toLocaleString()
+                    : "Actualmente dentro de las instalaciones"}
+                </td>
+                <td className="px-4 py-2 text-sm text-gray-900">{ingreso.lugar_visita}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">{ingreso.motivo}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">{ingreso.nro_tarjeta}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p className="text-gray-600">Este registro no posee ingresos registrados.</p>
+    )}
+  </div>
+
+
+</>
+  );  
 }
