@@ -1,8 +1,10 @@
 'use client';
 
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { Search } from "lucide-react"; // Importamos el icono de búsqueda
+import { Search, UserPlus } from "lucide-react"; // Importamos el icono de búsqueda
 import { useDebouncedCallback } from 'use-debounce';
+import Link from "next/link";
+import { buttonVariants } from "../ui/button";
 
 export default function Buscador({ placeholder }: { placeholder: string }) {
     const searchParams = useSearchParams();
@@ -22,7 +24,7 @@ export default function Buscador({ placeholder }: { placeholder: string }) {
         
  
     return (
-        <div className="relative flex flex-1 flex-shrink-0">
+        <div className="relative flex flex-1 flex-shrink-0 items-center gap-4">
             <label htmlFor="search" className="sr-only">
                 Search
             </label>
@@ -35,6 +37,9 @@ export default function Buscador({ placeholder }: { placeholder: string }) {
                 }}
                 defaultValue={searchParams.get('query')?.toString()}
             />
+            <Link href={"/crear_registro"} className={buttonVariants({variant: 'default'})}>
+                <UserPlus/>Crear Registro
+            </Link>
         </div>
     );
 }
