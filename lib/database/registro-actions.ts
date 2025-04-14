@@ -5,6 +5,7 @@ import { Registro, insertarRegistro } from '@/lib/database/registros-queries';
 import { RegistroSchema } from '@/components/registros/crear-registro-form'; 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { DatabaseError } from 'pg';
 
 export async function crearRegistro(data: z.infer<typeof RegistroSchema>) {
   try {
@@ -25,11 +26,15 @@ export async function crearRegistro(data: z.infer<typeof RegistroSchema>) {
     const nuevoRegistro = await insertarRegistro(registro);
     
     // Opcional: revalidar la ruta para actualizar datos en componentes
-    revalidatePath('/ruta-donde-muestras-registros');
+    revalidatePath('/buscar_registro');
     
     return { success: true, registro: nuevoRegistro };
-  } catch (error) {
-    console.error("Error al crear registro:", error);
-    return { success: false, error: String(error) };
+  } catch (error:unknown) {
+    const dbError = error as DatabaseError;
+    if (dbError.code === '23505') {
+      // Código de error de Postgres para clave duplicada
+      return { success: false, error: 'Ya existe un registro con ese documento' };
+    }
+    return { success: false, error: 'Error inesperado al crear el registro' };
   }
 }

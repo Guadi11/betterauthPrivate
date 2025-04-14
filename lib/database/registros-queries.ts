@@ -174,11 +174,15 @@ export async function insertarRegistro(registro: Omit<Registro, 'referido_cc'> &
     registro.nacionalidad || null,
     registro.domicilio_real || null,
     registro.domicilio_eventual || null,
-    registro.referido_cc || false
+    registro.referido_cc ?? false
   ];
   
-  const result = await query(queryText, values);
-  return result.rows[0];
+  try{
+    const result = await query(queryText, values);
+    return result.rows[0];
+  } catch (error){
+    throw error;
+  }
 }
 
 /**

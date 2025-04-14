@@ -96,11 +96,16 @@ export default function RegistroForm(){
         // Llamar a la server action
       const result = await crearRegistro(values);
         
-        if (result) {
+        if (result.success) {
           console.log("Registro creado con éxito:", result);
           form.reset();
         } else {
-          console.error("Error al crear el registro:", result);
+          if (result.error?.includes("documento")) {
+            form.setError("documento", { message: result.error });
+          } else {
+            // Podés agregar manejo para otros campos o errores generales
+            console.error("Otro error:", result.error);
+          }
         }
       } catch (error) {
         console.error("Error al enviar el formulario:", error);
