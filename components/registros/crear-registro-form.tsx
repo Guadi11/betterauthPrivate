@@ -121,7 +121,10 @@ export default function RegistroForm(){
             name="documento"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Documento</FormLabel>
+                <FormLabel>
+                  Documento
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                     <Input placeholder="81544970" {...field} />
                 </FormControl>
@@ -138,7 +141,10 @@ export default function RegistroForm(){
             name="tipo_documento"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Tipo de Documento</FormLabel>
+                <FormLabel>
+                  Tipo de Documento
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
@@ -164,7 +170,10 @@ export default function RegistroForm(){
             name="nombre"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre</FormLabel>
+                <FormLabel>
+                  Nombre
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Ingrese su nombre" {...field} />
                 </FormControl>
@@ -178,7 +187,10 @@ export default function RegistroForm(){
               name="apellido"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Apellido</FormLabel>
+                  <FormLabel>
+                    Apellido
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Ingrese su apellido" {...field} />
                   </FormControl>
