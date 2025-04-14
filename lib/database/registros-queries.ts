@@ -24,6 +24,10 @@ export async function obtenerTodosLosRegistros(): Promise<Registro[]> {
   return result.rows;
 }
 
+export async function getTotalRegistros(): Promise<number> {
+  const result = await query("SELECT COUNT(*) FROM registro");
+  return parseInt(result.rows[0].count, 10);
+}
 /**
  * Obtiene registros filtrados con paginación
  * @consulta texto con el cual se busca en la bdd

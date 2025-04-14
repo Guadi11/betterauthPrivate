@@ -1,30 +1,13 @@
-import IngresosButton from "@/components/ingresos/ver-ingresos-button";
-import OrganizationButton from "@/components/Vinculaciones/organizations-button";
-import SessionCard from "@/components/session-card-sv";
-import SignInButton from "@/components/sign-in-button";
-import SignOutButton from "@/components/sign-out-button";
-import SignUpButton from "@/components/sign-up-button";
+// app/dashboard/page.tsx o donde renderices el dashboard
+import RegistroTotalCard from "@/components/dashboard/contador-registros-card";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6 space-y-4">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Proyecto Cargo Contra Inteligencia</h1>
-        
-        <SessionCard/>
-        
-        <div className="grid grid-cols-3 gap-4">
-          <SignUpButton />
-          <SignInButton />
-          <SignOutButton />
-        </div>
-        
-        
-        <div className="grid grid-cols-2 gap-4">
-          <OrganizationButton />
-          <IngresosButton />
-        </div>
+    <main className="p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <RegistroTotalCard />
+        {/* Otras cards que vayas a agregar */}
       </div>
-    </div>
+    </main>
   );
 }
