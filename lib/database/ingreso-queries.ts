@@ -9,6 +9,8 @@ export interface Ingreso {
   fecha_egreso: string | null;
   lugar_visita: string;
   motivo: string;
+  observacion: string;
+  identificador_solicitante: string;
 }
 
 export async function obtenerIngresosPorDocumento(documento: string): Promise<Ingreso[]> {

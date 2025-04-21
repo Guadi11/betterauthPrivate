@@ -19,6 +19,8 @@ export function HistorialIngresos({ ingresos }: Props) {
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Lugar</th>
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Motivo</th>
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Tarjeta</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Observación</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Identificador Solicitante</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
@@ -39,6 +41,8 @@ export function HistorialIngresos({ ingresos }: Props) {
                   <td className="px-4 py-2 text-sm text-gray-900">{ingreso.lugar_visita}</td>
                   <td className="px-4 py-2 text-sm text-gray-900">{ingreso.motivo}</td>
                   <td className="px-4 py-2 text-sm text-gray-900">{ingreso.nro_tarjeta}</td>
+                  <td className="px-4 py-2 text-sm text-gray-900">{ingreso.observacion || "Sin Observacion"}</td>
+                  <td className="px-4 py-2 text-sm text-gray-900">{ingreso.identificador_solicitante}</td>
                 </tr>
               ))}
             </tbody>

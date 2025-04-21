@@ -27,9 +27,20 @@ CREATE TABLE ingreso_por_dia (
     fecha_egreso TIMESTAMP,
     lugar_visita VARCHAR(100) NOT NULL,
     motivo TEXT NOT NULL,
+    observacion TEXT,
+    identificador_solicitante VARCHAR(8) NOT NULL,
     CONSTRAINT fk_documento FOREIGN KEY (documento) REFERENCES registro(documento),
+    CONSTRAINT fk_solicitante FOREIGN KEY (identificador_solicitante) REFERENCES solicitante(identificador);    
     CONSTRAINT chk_max_duracion_visita CHECK (
         fecha_egreso IS NULL OR 
         fecha_egreso <= fecha_ingreso + INTERVAL '24 hours'
     )
+);
+
+CREATE TABLE solicitante (
+    identificador VARCHAR(8) PRIMARY KEY CHECK (identificador ~ '^\d{8}$'),
+    tipo_identificador VARCHAR(3) NOT NULL CHECK (tipo_identificador IN ('MR', 'DNI')),
+    jerarquia VARCHAR(6) NOT NULL,
+    destino VARCHAR(8) NOT NULL, -- puede ser null
+    telefono VARCHAR(20)
 );
