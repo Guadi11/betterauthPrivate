@@ -31,3 +31,12 @@ export async function obtenerIngresosPorDocumento(documento: string): Promise<In
     throw new Error('No se pudieron obtener los ingresos.');
   }
 }
+
+export async function darSalida(id_ingreso: number) {
+  const now = new Date();
+  const result = await query(
+    'UPDATE ingreso_por_dia SET fecha_egreso = $1 WHERE id_ingreso = $2 RETURNING *;',
+    [now, id_ingreso]
+  );
+  return result.rows[0]; // opcional, para verificar que se actualizó
+}

@@ -1,4 +1,5 @@
 import { Ingreso } from "@/lib/database/ingreso-queries";
+import { BotonDarSalida } from "../ingresos/registrar-salida-button";
 
 interface Props {
   ingresos: Ingreso[] | null;
@@ -35,9 +36,12 @@ export function HistorialIngresos({ ingresos }: Props) {
                     {ingreso.fecha_egreso ? (
                       new Date(ingreso.fecha_egreso).toLocaleString()
                     ) : (
-                      <span className="inline-block px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-semibold">
-                        Actualmente dentro de las instalaciones
-                      </span>
+                        <div className="flex flex-col gap-1">
+                        <span className="inline-block px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-semibold">
+                          Actualmente dentro de las instalaciones
+                        </span>
+                        <BotonDarSalida id_ingreso={ingreso.id_ingreso} />
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-2 text-sm text-gray-900">{ingreso.lugar_visita}</td>
