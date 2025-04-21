@@ -18,7 +18,7 @@ export async function obtenerIngresosPorDocumento(documento: string): Promise<In
 
   const queryText = `
     SELECT *
-    FROM ingreso_por_dia
+    FROM vista_ingresos_con_solicitante
     WHERE documento = $1
     ORDER BY fecha_ingreso DESC
   `;
