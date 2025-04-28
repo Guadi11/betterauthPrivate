@@ -22,7 +22,9 @@ const buttonVariants = cva(
         'default-pen':
           "bg-yellow-500 text-primary-foreground shadow hover:bg-yellow-700",
         'default-pat':
-          "bg-indigo-500 text-primary-foreground shadow hover:bg-indigo-700"
+          "bg-indigo-500 text-primary-foreground shadow hover:bg-indigo-700",
+        'dar_ingreso':
+          "bg-green-500 text-primary-foreground shadow hover:bg-green-700"
       },
       size: {
         default: "h-9 px-4 py-2",

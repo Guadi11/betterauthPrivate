@@ -1,3 +1,4 @@
+import DarIngresoButton from "@/components/ingresos/dar-ingreso-button";
 import { HistorialIngresos } from "@/components/registros/historial-ingresos";
 import { IngresoConSolicitante, obtenerIngresosPorDocumento } from "@/lib/database/ingreso-queries";
 import { obtenerRegistroPorDocumento, Registro } from "@/lib/database/registros-queries";
@@ -60,6 +61,8 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
           </div>
         </div>
       </div>
+      
+      <DarIngresoButton/>
 
       <HistorialIngresos ingresos={ingresos} />
     </>
