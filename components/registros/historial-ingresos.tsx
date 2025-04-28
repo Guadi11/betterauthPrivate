@@ -1,8 +1,8 @@
-import { Ingreso } from "@/lib/database/ingreso-queries";
+import { IngresoConSolicitante } from "@/lib/database/ingreso-queries";
 import { BotonDarSalida } from "../ingresos/registrar-salida-button";
 
 interface Props {
-  ingresos: Ingreso[] | null;
+  ingresos: IngresoConSolicitante[] | null;
 }
 
 export function HistorialIngresos({ ingresos }: Props) {

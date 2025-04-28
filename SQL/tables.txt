@@ -38,9 +38,56 @@ CREATE TABLE ingreso_por_dia (
 );
 
 CREATE TABLE solicitante (
-    identificador VARCHAR(8) PRIMARY KEY CHECK (identificador ~ '^\d{8}$'),
+    identificador VARCHAR(8) PRIMARY KEY,
     tipo_identificador VARCHAR(3) NOT NULL CHECK (tipo_identificador IN ('MR', 'DNI')),
     jerarquia VARCHAR(6) NOT NULL,
-    destino VARCHAR(8) NOT NULL, -- puede ser null
-    telefono VARCHAR(20)
+    destino VARCHAR(8) NOT NULL, 
+    telefono VARCHAR(20) NOT NULL,
+    nombre VARCHAR(100) NOT NULL
 );
+
+--VISTAS:
+CREATE VIEW vista_ingresos_completa AS
+SELECT 
+    i.id_ingreso,
+    i.documento,
+    r.tipo_documento,
+    r.nombre,
+    r.apellido,
+    r.fecha_nacimiento,
+    r.nacionalidad,
+    r.domicilio_real,
+    r.domicilio_eventual,
+    r.referido_cc,
+    i.nro_tarjeta,
+    i.fecha_ingreso,
+    i.fecha_egreso,
+    i.lugar_visita,
+    i.motivo,
+    i.observacion,
+    s.identificador AS identificador_solicitante,
+    s.tipo_identificador,
+    s.jerarquia,
+    s.destino,
+    s.telefono
+FROM ingreso_por_dia i
+JOIN registro r ON i.documento = r.documento
+JOIN solicitante s ON i.identificador_solicitante = s.identificador;
+
+CREATE VIEW vista_ingresos_con_solicitante AS
+ SELECT i.id_ingreso,
+    i.documento,
+    i.nro_tarjeta,
+    i.fecha_ingreso,
+    i.fecha_egreso,
+    i.lugar_visita,
+    i.motivo,
+    i.observacion,
+    s.identificador AS identificador_solicitante,
+    s.tipo_identificador,
+    s.nombre AS nombre_solicitante,
+    s.jerarquia,
+    s.destino,
+    s.telefono
+   FROM ingreso_por_dia i
+     JOIN solicitante s ON i.identificador_solicitante::text = s.identificador::text;

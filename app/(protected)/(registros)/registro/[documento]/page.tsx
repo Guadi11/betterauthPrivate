@@ -1,5 +1,5 @@
 import { HistorialIngresos } from "@/components/registros/historial-ingresos";
-import { Ingreso, obtenerIngresosPorDocumento } from "@/lib/database/ingreso-queries";
+import { IngresoConSolicitante, obtenerIngresosPorDocumento } from "@/lib/database/ingreso-queries";
 import { obtenerRegistroPorDocumento, Registro } from "@/lib/database/registros-queries";
 
 export default async function PaginaRegistro({ params }: { params: { documento: string } }) {
@@ -11,8 +11,7 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
     return <div>No se encontró el registro con el documento {documento}</div>;
   }
 
-  const ingresos : Ingreso[] | null = await obtenerIngresosPorDocumento(documento);
-  console.log(ingresos);
+  const ingresos : IngresoConSolicitante[] | null = await obtenerIngresosPorDocumento(documento);
   return (
     <>
       <div className="container mx-auto p-4">

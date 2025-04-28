@@ -13,7 +13,15 @@ export interface Ingreso {
   identificador_solicitante: string;
 }
 
-export async function obtenerIngresosPorDocumento(documento: string): Promise<Ingreso[]> {
+export interface IngresoConSolicitante extends Ingreso {
+  tipo_identificador: string;
+  jerarquia: string;
+  destino: string;
+  telefono: string;
+  nombre_solicitante: string;
+}
+
+export async function obtenerIngresosPorDocumento(documento: string): Promise<IngresoConSolicitante[]> {
   noStore();
 
   const queryText = `
