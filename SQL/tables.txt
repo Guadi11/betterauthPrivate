@@ -48,8 +48,7 @@ CREATE TABLE solicitante (
 
 --VISTAS:
 CREATE VIEW vista_ingresos_completa AS
-SELECT 
-    i.id_ingreso,
+ SELECT i.id_ingreso,
     i.documento,
     r.tipo_documento,
     r.nombre,
@@ -67,12 +66,13 @@ SELECT
     i.observacion,
     s.identificador AS identificador_solicitante,
     s.tipo_identificador,
+    s.nombre AS nombre_solicitante,
     s.jerarquia,
     s.destino,
     s.telefono
-FROM ingreso_por_dia i
-JOIN registro r ON i.documento = r.documento
-JOIN solicitante s ON i.identificador_solicitante = s.identificador;
+   FROM ingreso_por_dia i
+     JOIN registro r ON i.documento::text = r.documento::text
+     JOIN solicitante s ON i.identificador_solicitante::text = s.identificador::text;
 
 CREATE VIEW vista_ingresos_con_solicitante AS
  SELECT i.id_ingreso,
