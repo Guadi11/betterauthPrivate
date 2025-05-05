@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function DarIngresoButton(){
     return(
-        <Link href="/dar_ingreso" className={buttonVariants({variant:'dar_ingreso', size:'default'})}>
+        <Link href="/dar_ingreso" className={buttonVariants({variant:'dar_ingreso', size:'lg'})}>
             <DoorOpen/> Dar Ingreso
         </Link>
     )
