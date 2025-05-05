@@ -16,6 +16,7 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
   const ingresos : IngresoConSolicitante[] | null = await obtenerIngresosPorDocumento(documento);
   return (
     <>
+      <h1>Prueba de Gitlab</h1>
       <DatosDelRegistro registro={registro}/>
       
       <DarIngresoButton/>
