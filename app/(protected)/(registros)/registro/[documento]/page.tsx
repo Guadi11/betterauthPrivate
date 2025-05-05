@@ -17,7 +17,7 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
   return (
     <div>
       <div className="flex">
-        <div className="w-1/2">
+        <div className="w-full lg:w-1/2">
           <DatosDelRegistro registro={registro}/>
         </div>
 
