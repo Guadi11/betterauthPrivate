@@ -6,7 +6,7 @@ interface Props{
 
 export default function DatosDelRegistro({ registro }: Props){
     return(
-    <div className="container mx-auto p-4">
+    <div className="p-4 w-full">
         <h1 className="text-2xl font-bold mb-4">Datos del Registro</h1>
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:px-6">
