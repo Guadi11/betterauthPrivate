@@ -24,6 +24,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { darIngreso } from "@/lib/database/ingreso-actions";
+import { useRouter } from "next/navigation";
 
 const ingresoSchema = z.object({
   lugar_visita: z.string().min(1, "Campo requerido"),
@@ -71,10 +72,14 @@ export default function DarIngreso() {
 
     const params = useParams<{ documento: string }>();
 
+    const router = useRouter();
+
     const onSubmit = async (data: FormData) => {
         // Aquí iría la lógica con server action (próximo paso)
         console.log("Enviar", { documento: params.documento, ...data });
         await darIngreso(params.documento, data);
+        router.refresh();
+        router.push(`/registro/${params.documento}`); 
     };
 
     return (
