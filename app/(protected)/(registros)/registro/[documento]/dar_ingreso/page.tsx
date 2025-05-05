@@ -60,7 +60,7 @@ export default function DarIngreso() {
             },
             solicitante: {
               identificador: "",
-              tipo_identificador: "DNI", // o "MR" si querés por default
+              tipo_identificador: "MR", // o "MR" si querés por default
               nombre: "",
               jerarquia: "",
               destino: "",
