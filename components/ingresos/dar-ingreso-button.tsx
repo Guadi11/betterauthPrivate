@@ -2,9 +2,16 @@ import { buttonVariants } from "@/components/ui/button";
 import { DoorOpen } from "lucide-react";
 import Link from "next/link";
 
-export default function DarIngresoButton(){
+interface Props {
+  documento: string;
+}
+
+export default function DarIngresoButton({ documento }: Props){
     return(
-        <Link href="/dar_ingreso" className={buttonVariants({variant:'dar_ingreso', size:'lg'})}>
+        <Link 
+            href={`/registro/${documento}/dar_ingreso`} 
+            className={buttonVariants({variant:'dar_ingreso', size:'lg'})}
+        >
             <DoorOpen/> Dar Ingreso
         </Link>
     )

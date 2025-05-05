@@ -22,7 +22,7 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
         </div>
 
         <div>
-          <DarIngresoButton/>
+          <DarIngresoButton documento={documento}/>
         </div>
       </div>
 
