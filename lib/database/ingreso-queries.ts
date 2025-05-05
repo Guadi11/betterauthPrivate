@@ -48,3 +48,28 @@ export async function darSalida(id_ingreso: number) {
   );
   return result.rows[0]; // opcional, para verificar que se actualizó
 }
+
+
+export async function insertarIngreso(data: {
+  documento: string;
+  nro_tarjeta: string;
+  lugar_visita: string;
+  motivo: string;
+  observacion?: string;
+  identificador_solicitante: string;
+}) {
+  const queryText = `
+    INSERT INTO ingreso_por_dia (
+      documento, nro_tarjeta, fecha_ingreso, lugar_visita, motivo, observacion, identificador_solicitante
+    ) VALUES ($1, $2, NOW(), $3, $4, $5, $6)
+  `;
+
+  return query(queryText, [
+    data.documento,
+    data.nro_tarjeta,
+    data.lugar_visita,
+    data.motivo,
+    data.observacion ?? null,
+    data.identificador_solicitante,
+  ]);
+}

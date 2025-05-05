@@ -1,9 +1,9 @@
 'use server'
 
 import { IngresoConSolicitanteSchema } from '@/app/(protected)/(registros)/registro/[documento]/dar_ingreso/page';
-import { darSalida } from '@/lib/database/ingreso-queries';
+import { darSalida, insertarIngreso } from '@/lib/database/ingreso-queries';
 import { z } from 'zod';
-import { query } from './db';
+import { insertarSolicitante, obtenerSolicitanteConId } from '@/lib/database/solicitante-queries';
 
 export async function realizarSalida(id_ingreso: number) {
   try {
@@ -18,38 +18,20 @@ export async function realizarSalida(id_ingreso: number) {
 export async function darIngreso(documento: string, data: z.infer<typeof IngresoConSolicitanteSchema>){
   const { ingreso, solicitante } = data;
   // Verificamos si el solicitante ya existe
-  const solicitanteExistente = await query(
-    `SELECT 1 FROM solicitante WHERE identificador = $1`,
-    [solicitante.identificador]
-  );
+  const solicitanteExistente = await obtenerSolicitanteConId(data.solicitante.identificador);
 
-  if (solicitanteExistente.rowCount === 0) {
-    await query(
-      `INSERT INTO solicitante (identificador, tipo_identificador, nombre, jerarquia, destino, telefono)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [
-        solicitante.identificador,
-        solicitante.tipo_identificador,
-        solicitante.nombre,
-        solicitante.jerarquia,
-        solicitante.destino,
-        solicitante.telefono,
-      ]
-    );
+  if (!solicitanteExistente) {
+    await insertarSolicitante(data.solicitante);
   }
 
-  await query(
-    `INSERT INTO ingreso_por_dia (documento, nro_tarjeta, fecha_ingreso, lugar_visita, motivo, observacion, identificador_solicitante)
-     VALUES ($1, $2, NOW(), $3, $4, $5, $6)`,
-    [
-      documento,
-      ingreso.nro_tarjeta,
-      ingreso.lugar_visita,
-      ingreso.motivo,
-      ingreso.observacion ?? null,
-      solicitante.identificador,
-    ]
-  );
+  await insertarIngreso({
+    documento: documento,
+    nro_tarjeta: ingreso.nro_tarjeta,
+    lugar_visita: ingreso.lugar_visita,
+    motivo: ingreso.motivo,
+    observacion: ingreso.observacion,
+    identificador_solicitante: solicitante.identificador,
+  });
 
   return { ok: true };
 }
