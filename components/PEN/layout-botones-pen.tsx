@@ -1,5 +1,4 @@
 import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
-import RegistrosButton from "@/components/ingresos/registrar-ingreso-button";
 import IngresosButton from "@/components/ingresos/ver-ingresos-button";
 import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
 
@@ -15,7 +14,6 @@ export default async function BotonesPENLayout(){
     return(
         <div className="flex-1 space-y-3">
             <IngresosButton/>
-            <RegistrosButton/>
         </div>
     );
 }
