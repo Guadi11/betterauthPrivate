@@ -75,8 +75,6 @@ export default function DarIngreso() {
     const router = useRouter();
 
     const onSubmit = async (data: FormData) => {
-        // Aquí iría la lógica con server action (próximo paso)
-        console.log("Enviar", { documento: params.documento, ...data });
         await darIngreso(params.documento, data);
         router.refresh();
         router.push(`/registro/${params.documento}`); 
