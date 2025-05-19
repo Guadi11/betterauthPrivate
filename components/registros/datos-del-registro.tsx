@@ -6,10 +6,10 @@ interface Props{
 
 export default function DatosDelRegistro({ registro }: Props) {
   return (
-    <div className="p-4 w-full">
-      <h1 className="text-2xl font-bold mb-4">Datos del Registro</h1>
+    <div className="w-full">
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        
         <div className="px-4 py-5 sm:px-6 border-b">
           <h2 className="text-3xl font-bold text-gray-900">{registro.nombre} {registro.apellido}</h2>
           <p className="mt-2 text-md text-gray-600">
