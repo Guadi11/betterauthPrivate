@@ -96,7 +96,7 @@ export async function obtenerIngresosCompletos(): Promise<IngresoCompleto[]> {
       jerarquia,
       destino,
       telefono,
-      nombre AS nombre_solicitante,
+      nombre_solicitante,
       r.nombre AS nombre_registro,
       r.apellido AS apellido_registro,
       r.tipo_documento AS tipo_documento_registro
