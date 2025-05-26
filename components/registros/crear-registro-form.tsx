@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -70,6 +71,7 @@ export const RegistroSchema = z.object({
   }).strict();
 
 export default function RegistroForm(){
+    const router = useRouter();
     //1. Definir el formulario
     const form = useForm<z.infer<typeof RegistroSchema>>({
         resolver: zodResolver(RegistroSchema),
@@ -95,11 +97,10 @@ export default function RegistroForm(){
         console.log("Enviando datos...", values);
         
         // Llamar a la server action
-      const result = await crearRegistro(values);
+        const result = await crearRegistro(values);
         
         if (result.success) {
-          console.log("Registro creado con éxito:", result);
-          form.reset();
+          router.push(`/registro/${values.documento}`);
         } else {
           if (result.error?.includes("documento")) {
             form.setError("documento", { message: result.error });
