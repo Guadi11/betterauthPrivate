@@ -5,7 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 import { useState } from "react";
 
-const ROLES = ["member", "admin", "owner"] as const;
+const ROLES = {member: "Miembro", admin:"Administrador", owner:"Dueño"} as const;
 
 export default function SignUpForm() {
   const [form, setForm] = useState<{
@@ -95,10 +95,16 @@ export default function SignUpForm() {
         {/* Rol */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">Rol</label>
-          <select name="role" value={form.role} onChange={handleChange}
-            className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            {ROLES.map((r) => (
-              <option key={r} value={r}>{r}</option>
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          >
+            {Object.entries(ROLES).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
             ))}
           </select>
         </div>
