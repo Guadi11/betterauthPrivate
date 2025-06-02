@@ -8,7 +8,7 @@ interface Props {
 export function HistorialIngresos({ ingresos }: Props) {
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Historial de Ingresos</h2>
+      <h2 className="text-xl font-semibold mb-4">Ultimos Accessos:</h2>
 
       {ingresos && ingresos.length > 0 ? (
         <div className="overflow-auto max-h-[36rem] border border-gray-300 rounded-lg">

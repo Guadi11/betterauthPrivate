@@ -22,7 +22,7 @@ export default async function DarIngresoButton({ documento }: Props){
             href={`/registro/${documento}/dar_ingreso`} 
             className={buttonVariants({variant:'dar_ingreso', size:'lg'})}
         >
-            <DoorOpen/> Dar Ingreso
+            <DoorOpen/> Dar Entrada
         </Link>
     )
 }

@@ -1,4 +1,4 @@
-import DarIngresoButton from "@/components/ingresos/dar-ingreso-button";
+import DarIngresoButton from "@/components/ingresos/dar-entrada-button";
 import DatosDelRegistro from "@/components/registros/datos-del-registro";
 import { HistorialIngresos } from "@/components/registros/historial-ingresos";
 import { IngresoConSolicitante, obtenerIngresosPorDocumento } from "@/lib/database/ingreso-queries";
