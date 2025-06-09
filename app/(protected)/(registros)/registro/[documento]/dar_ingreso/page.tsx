@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation'
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -92,9 +93,12 @@ export default function DarIngreso() {
             name="ingreso.lugar_visita"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Lugar de Visita</FormLabel>
+                <FormLabel>
+                  Lugar de Visita
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="HNPB" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -108,7 +112,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Motivo</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="Ingresa por turno traumatologia" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -122,7 +126,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Observación</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="INGRESA SIN DNI - DEJA LIC. DE CONDUCIR" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -136,7 +140,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>N° Tarjeta</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="ZR0458" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -154,8 +158,11 @@ export default function DarIngreso() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Identificador</FormLabel>
+                <FormDescription>
+                    Ingrese Matricula o DNI. Sin guiones o puntos.
+                </FormDescription>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="4984245" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -189,7 +196,7 @@ export default function DarIngreso() {
             name="solicitante.nombre"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre</FormLabel>
+                <FormLabel>Nombre Completo</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -205,7 +212,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Jerarquía</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="CPMU" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -219,7 +226,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Destino</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="SIAG" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -233,7 +240,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Teléfono</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="+54 2932 458791"{...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
