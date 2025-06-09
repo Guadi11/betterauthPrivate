@@ -19,7 +19,7 @@ export async function crearRegistro(data: z.infer<typeof RegistroSchema>) {
       nacionalidad: data.nacionalidad || undefined,
       domicilio_real: data.domicilio_real || undefined,
       domicilio_eventual: data.domicilio_eventual || undefined,
-      referido_cc: data.referido_cc
+      observacion_cc: data.observacion_cc
     };
     
     // Insertar en la base de datos

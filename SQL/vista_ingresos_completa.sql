@@ -9,7 +9,7 @@ SELECT
     r.nacionalidad,
     r.domicilio_real,
     r.domicilio_eventual,
-    r.referido_cc,
+    r.observacion_cc,
     i.nro_tarjeta,
     i.fecha_ingreso,
     i.fecha_egreso,

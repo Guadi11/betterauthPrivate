@@ -11,7 +11,7 @@ export interface Registro {
   nacionalidad?: string;
   domicilio_real?: string;
   domicilio_eventual?: string;
-  referido_cc?: boolean;
+  observacion_cc?: boolean;
 }
 
 /**
@@ -149,7 +149,7 @@ export async function buscarRegistrosPorNombreApellidoDocumento(texto: string): 
 }
 
 // Insertar un nuevo registro
-export async function insertarRegistro(registro: Omit<Registro, 'referido_cc'> & { referido_cc?: boolean }): Promise<Registro> {
+export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'> & { observacion_cc?: boolean }): Promise<Registro> {
   const queryText = `
     INSERT INTO registro (
       documento, 
@@ -160,7 +160,7 @@ export async function insertarRegistro(registro: Omit<Registro, 'referido_cc'> &
       nacionalidad, 
       domicilio_real, 
       domicilio_eventual, 
-      referido_cc
+      observacion_cc
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *
   `;
@@ -174,7 +174,7 @@ export async function insertarRegistro(registro: Omit<Registro, 'referido_cc'> &
     registro.nacionalidad || null,
     registro.domicilio_real || null,
     registro.domicilio_eventual || null,
-    registro.referido_cc ?? false
+    registro.observacion_cc ?? false
   ];
   
   try{

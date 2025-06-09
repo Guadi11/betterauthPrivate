@@ -38,8 +38,8 @@ export default function DatosDelRegistro({ registro }: Props) {
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{registro.domicilio_eventual || "No especificado"}</dd>
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Referido CC</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{registro.referido_cc ? "Sí" : "No"}</dd>
+              <dt className="text-sm font-medium text-gray-500">Observacion CC</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{registro.observacion_cc ? "Sí" : "No"}</dd>
             </div>
           </dl>
         </div>

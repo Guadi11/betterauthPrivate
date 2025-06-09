@@ -20,7 +20,7 @@ const registroSchema = z.object({
   nacionalidad: z.string().optional(),
   domicilio_real: z.string().optional(),
   domicilio_eventual: z.string().optional(),
-  referido_cc: z.boolean().optional()
+  observacion_cc: z.boolean().optional()
 })
 
 type FormData = z.infer<typeof registroSchema>
@@ -34,7 +34,7 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
       nacionalidad: registro.nacionalidad ?? undefined,
       domicilio_real: registro.domicilio_real ?? undefined,
       domicilio_eventual: registro.domicilio_eventual ?? undefined,
-      referido_cc: registro.referido_cc ?? false,
+      observacion_cc: registro.observacion_cc ?? false,
   })
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -105,10 +105,10 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
 
       <div className="flex items-center gap-2">
         <Checkbox
-          checked={form.referido_cc || false}
-          onCheckedChange={(checked) => handleChange("referido_cc", Boolean(checked))}
+          checked={form.observacion_cc || false}
+          onCheckedChange={(checked) => handleChange("observacion_cc", Boolean(checked))}
         />
-        <label>Referido a CC</label>
+        <label>Observacion a CC</label>
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>

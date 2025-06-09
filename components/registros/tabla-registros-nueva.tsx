@@ -30,9 +30,9 @@ export default async function RegistrosTable({
                             <p className="text-sm text-gray-500">{registro.tipo_documento}: {registro.documento}</p>
                         </div>
                         <div className="text-sm">
-                            {registro.referido_cc && (
+                            {registro.observacion_cc && (
                             <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                                Referido CC
+                                Observacion CC
                             </span>
                             )}
                         </div>
@@ -95,7 +95,7 @@ export default async function RegistrosTable({
                         Domicilio Real
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                        Referido CC
+                        Observacion CC
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium text-center">
                         Acciones
@@ -128,7 +128,7 @@ export default async function RegistrosTable({
                             {registro.domicilio_real || 'Sin especificar'}
                         </td>
                         <td className="whitespace-nowrap px-3 py-3">
-                            {registro.referido_cc ? (
+                            {registro.observacion_cc ? (
                             <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                 Sí
                             </span>

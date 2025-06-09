@@ -7,7 +7,7 @@ CREATE TABLE registro (
     nacionalidad VARCHAR(100),
     domicilio_real VARCHAR(255),
     domicilio_eventual VARCHAR(255),
-    referido_cc BOOLEAN DEFAULT FALSE,
+    observacion_cc BOOLEAN DEFAULT FALSE,
     
     CONSTRAINT check_documento 
         CHECK (

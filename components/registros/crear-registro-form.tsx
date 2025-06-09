@@ -67,7 +67,7 @@ export const RegistroSchema = z.object({
       .max(255, "El domicilio eventual no puede superar 255 caracteres")
       .optional(),
     
-    referido_cc: z.boolean().default(false)
+    observacion_cc: z.boolean().default(false)
   }).strict();
 
 export default function RegistroForm(){
@@ -84,7 +84,7 @@ export default function RegistroForm(){
             nacionalidad: "",
             domicilio_real: "",
             domicilio_eventual: "",
-            referido_cc: false
+            observacion_cc: false
         }
     })
 
