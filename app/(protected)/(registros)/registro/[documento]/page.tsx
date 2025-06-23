@@ -2,6 +2,7 @@ import DarIngresoButton from "@/components/ingresos/dar-entrada-button";
 import DatosDelRegistro from "@/components/registros/datos-del-registro";
 import { HistorialIngresos } from "@/components/registros/historial-ingresos";
 import FormularioObservacion from "@/components/registros/observacion-registro-form";
+import PatVencimiento from "@/components/registros/tiene-pat-registro";
 import { IngresoConSolicitante, obtenerIngresosPorDocumento } from "@/lib/database/ingreso-queries";
 import { obtenerRegistroPorDocumento, Registro } from "@/lib/database/registros-queries";
 
@@ -25,6 +26,7 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
         <div className="p-2 w-full lg:w-1/2 space-y-2">
           <DarIngresoButton documento={documento}/>
           <FormularioObservacion/>
+          <PatVencimiento />
         </div>
       </div>
 
