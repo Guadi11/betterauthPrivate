@@ -26,7 +26,7 @@ export async function darIngreso(documento: string, data: z.infer<typeof Ingreso
 
   await insertarIngreso({
     documento: documento,
-    nro_tarjeta: ingreso.nro_tarjeta,
+    nro_tarjeta: ingreso.nro_tarjeta.prefijo + ingreso.nro_tarjeta.sufijo,
     lugar_visita: ingreso.lugar_visita,
     motivo: ingreso.motivo,
     observacion: ingreso.observacion,

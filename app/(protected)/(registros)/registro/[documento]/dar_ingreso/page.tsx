@@ -31,7 +31,10 @@ const ingresoSchema = z.object({
   lugar_visita: z.string().min(1, "Campo requerido"),
   motivo: z.string().min(1, "Campo requerido"),
   observacion: z.string().optional(),
-  nro_tarjeta: z.string().min(1, "Campo requerido"),
+  nro_tarjeta: z.object({
+    prefijo: z.enum(["ZR", "ZC", "HN", "PS"]),
+    sufijo: z.string().regex(/^\d{4}$/, "Debe tener 4 dígitos"),
+  }),
 });
 
 const solicitanteSchema = z.object({
@@ -58,7 +61,10 @@ export default function DarIngreso() {
               lugar_visita: "",
               motivo: "",
               observacion: "",
-              nro_tarjeta: "",
+              nro_tarjeta: {
+                prefijo: "ZR",
+                sufijo: "",
+              }
             },
             solicitante: {
               identificador: "",
@@ -76,6 +82,7 @@ export default function DarIngreso() {
     const router = useRouter();
 
     const onSubmit = async (data: FormData) => {
+      console.log(data);
         await darIngreso(params.documento, data);
         router.refresh();
         router.push(`/registro/${params.documento}`); 
@@ -133,19 +140,46 @@ export default function DarIngreso() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="ingreso.nro_tarjeta"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>N° Tarjeta</FormLabel>
-                <FormControl>
-                  <Input placeholder="ZR0458" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="ingreso.nro_tarjeta.prefijo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prefijo</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ZR">ZR</SelectItem>
+                      <SelectItem value="ZC">ZC</SelectItem>
+                      <SelectItem value="HN">HN</SelectItem>
+                      <SelectItem value="PS">PS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ingreso.nro_tarjeta.sufijo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número Tarjeta</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0458" maxLength={4} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
         </div>
 
         {/* Sección Solicitante */}
