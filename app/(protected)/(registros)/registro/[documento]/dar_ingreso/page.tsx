@@ -126,7 +126,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Observación</FormLabel>
                 <FormControl>
-                  <Input placeholder="INGRESA SIN DNI - DEJA LIC. DE CONDUCIR" {...field} />
+                  <Input placeholder="OBSERVACION - SIN OBSERVACION" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -159,7 +159,7 @@ export default function DarIngreso() {
               <FormItem>
                 <FormLabel>Identificador</FormLabel>
                 <FormDescription>
-                    Ingrese Matricula o DNI. Sin guiones o puntos.
+                    Ingrese Matricula o DNI del solicitante. Sin guiones o puntos.
                 </FormDescription>
                 <FormControl>
                   <Input placeholder="4984245" {...field} />
