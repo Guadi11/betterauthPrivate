@@ -127,7 +127,7 @@ export default function RegistroForm(){
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                    <Input placeholder="81544970" {...field} />
+                    <Input placeholder="81544970" maxLength={20} {...field} />
                 </FormControl>
                 <FormDescription>
                     Ingrese el DNI o Pasaporte
@@ -176,7 +176,7 @@ export default function RegistroForm(){
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Ingrese su nombre" {...field} />
+                  <Input placeholder="Ingrese su nombre" maxLength={100} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -193,7 +193,7 @@ export default function RegistroForm(){
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Ingrese su apellido" {...field} />
+                    <Input placeholder="Ingrese su apellido" maxLength={100} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -234,7 +234,7 @@ export default function RegistroForm(){
                 <FormItem>
                   <FormLabel>Nacionalidad</FormLabel>
                   <FormControl>
-                    <Input placeholder="Argentina" {...field} />
+                    <Input placeholder="Argentina" maxLength={100} {...field} />
                   </FormControl>
                   <FormDescription>
                     Ingrese su nacionalidad
@@ -252,7 +252,7 @@ export default function RegistroForm(){
                 <FormItem>
                   <FormLabel>Domicilio Real</FormLabel>
                   <FormControl>
-                    <Input placeholder="Calle 123, Ciudad" {...field} />
+                    <Input placeholder="Calle 123, Ciudad" maxLength={255} {...field} />
                   </FormControl>
                   <FormDescription>
                     Ingrese su domicilio real
@@ -270,7 +270,7 @@ export default function RegistroForm(){
                 <FormItem>
                   <FormLabel>Domicilio Eventual</FormLabel>
                   <FormControl>
-                    <Input placeholder="Calle 456, Ciudad" {...field} />
+                    <Input placeholder="Calle 456, Ciudad" maxLength={100} {...field} />
                   </FormControl>
                   <FormDescription>
                     Ingrese su domicilio eventual si corresponde
