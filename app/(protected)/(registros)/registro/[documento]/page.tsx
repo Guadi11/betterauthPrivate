@@ -23,10 +23,12 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
           <DatosDelRegistro registro={registro}/>
         </div>
 
-        <div className="p-2 w-full lg:w-1/2 space-y-2">
-          <DarIngresoButton documento={documento}/>
-          <FormularioObservacion/>
-          <PatVencimiento />
+        <div className="w-full lg:w-1/2 flex flex-col gap-4 px-6 py-4">
+          <FormularioObservacion />
+          <div className="flex flex-row gap-4">
+            <DarIngresoButton documento={documento} />
+            <PatVencimiento />
+          </div>
         </div>
       </div>
 
