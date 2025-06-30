@@ -20,7 +20,6 @@ export default async function UserCard(){
             <div className="max-w-sm rounded overflow-hidden shadow-lg bg-white p-4 w-full">
               <h2 className="text-xl font-bold mb-2">Sesión Activa</h2>
               <p><strong>Usuario:</strong> {session.user.username}</p>
-              {session.user.email && <p><strong>Email:</strong> {session.user.email}</p>}
               {session.user.name && <p><strong>Nombre:</strong> {session.user.name}</p>}
               
               {organizations.length > 0 && (
