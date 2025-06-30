@@ -105,7 +105,7 @@ export default function DarIngreso() {
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="HNPB" {...field} />
+                  <Input placeholder="HNPB" maxLength={100} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,7 +117,10 @@ export default function DarIngreso() {
             name="ingreso.motivo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Motivo</FormLabel>
+                <FormLabel>
+                  Motivo
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input placeholder="Ingresa por turno traumatologia" {...field} />
                 </FormControl>
@@ -146,7 +149,10 @@ export default function DarIngreso() {
               name="ingreso.nro_tarjeta.prefijo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prefijo</FormLabel>
+                  <FormLabel>
+                    Prefijo
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -170,7 +176,10 @@ export default function DarIngreso() {
               name="ingreso.nro_tarjeta.sufijo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Número Tarjeta</FormLabel>
+                  <FormLabel>
+                    Número Tarjeta
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="0458" maxLength={4} {...field} />
                   </FormControl>
@@ -191,12 +200,15 @@ export default function DarIngreso() {
             name="solicitante.identificador"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Identificador</FormLabel>
+                <FormLabel>
+                  Identificador
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormDescription>
                     Ingrese Matricula o DNI del solicitante. Sin guiones o puntos.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="4984245" {...field} />
+                  <Input placeholder="4984245" maxLength={8} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -208,7 +220,10 @@ export default function DarIngreso() {
             name="solicitante.tipo_identificador"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tipo de Identificador</FormLabel>
+                <FormLabel>
+                  Tipo de Identificador
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -230,9 +245,12 @@ export default function DarIngreso() {
             name="solicitante.nombre"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre Completo</FormLabel>
+                <FormLabel>
+                  Nombre Completo
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} maxLength={100}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -244,9 +262,12 @@ export default function DarIngreso() {
             name="solicitante.jerarquia"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Jerarquía</FormLabel>
+                <FormLabel>
+                  Jerarquía
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="CPMU" {...field} />
+                  <Input placeholder="CPMU" maxLength={6} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -258,9 +279,12 @@ export default function DarIngreso() {
             name="solicitante.destino"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Destino</FormLabel>
+                <FormLabel>
+                  Destino
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="SIAG" {...field} />
+                  <Input placeholder="SIAG" maxLength={8} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -272,9 +296,12 @@ export default function DarIngreso() {
             name="solicitante.telefono"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Teléfono</FormLabel>
+                <FormLabel>
+                  Teléfono
+                  <span className="text-red-500">*</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="+54 2932 458791"{...field} />
+                  <Input placeholder="+54 2932 458791" maxLength={20} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
