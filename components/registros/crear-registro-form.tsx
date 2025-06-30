@@ -53,7 +53,9 @@ export const RegistroSchema = z.object({
       .max(100, "El apellido no puede superar 100 caracteres")
       .trim(),
     
-    fecha_nacimiento: z.date().optional(),
+    fecha_nacimiento: z.date()
+      .max(new Date(), { message: "La fecha de nacimiento no puede ser futura" })
+      .optional(),
     
     nacionalidad: z.string()
       .max(100, "La nacionalidad no puede superar 100 caracteres")
@@ -211,7 +213,9 @@ export default function RegistroForm(){
                   <Input 
                     type="date" 
                     {...field} 
-                    value={field.value ? field.value.toISOString().split('T')[0] : ''} 
+                    value={field.value instanceof Date && !isNaN(field.value.getTime()) 
+                      ? field.value.toISOString().split('T')[0] 
+                      : ''}
                     onChange={(e) => {
                       const date = e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined;
                       field.onChange(date);
