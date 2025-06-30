@@ -1,4 +1,3 @@
-import { buttonVariants } from "@/components/ui/button";
 import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
 import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 import { DoorOpen } from "lucide-react";
@@ -20,9 +19,9 @@ export default async function DarIngresoButton({ documento }: Props){
     return(
         <Link 
             href={`/registro/${documento}/dar_ingreso`} 
-            className={buttonVariants({variant:'dar_ingreso', size:'full'})}
+            className="w-full flex items-center justify-center gap-4 rounded-xl bg-green-600 text-white text-2xl py-4 px-6 hover:bg-green-700 transition"
         >
-            <DoorOpen/> Dar Entrada
+            <DoorOpen size={48}/> Dar Entrada
         </Link>
     )
 }
