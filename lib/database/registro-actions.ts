@@ -1,7 +1,7 @@
 // app/actions/registro-actions.ts
 'use server'
 
-import { Registro, insertarRegistro } from '@/lib/database/registros-queries';
+import { Registro, actualizarRegistroEnDB, insertarRegistro } from '@/lib/database/registros-queries';
 import { RegistroSchema } from '@/components/registros/crear-registro-form'; 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -36,5 +36,28 @@ export async function crearRegistro(data: z.infer<typeof RegistroSchema>) {
       return { success: false, error: 'Ya existe un registro con ese documento' };
     }
     return { success: false, error: 'Error inesperado al crear el registro' };
+  }
+}
+
+export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>) {
+  try{
+    const registro: Registro = {
+    documento: data.documento,
+      tipo_documento: data.tipo_documento,
+      nombre: data.nombre,
+      apellido: data.apellido,
+      fecha_nacimiento: data.fecha_nacimiento,
+      nacionalidad: data.nacionalidad || undefined,
+      domicilio_real: data.domicilio_real || undefined,
+      domicilio_eventual: data.domicilio_eventual || undefined,
+      observacion_cc: data.observacion_cc
+    }
+
+    await actualizarRegistroEnDB(registro)
+    revalidatePath(`/registro/${registro.documento}`)
+
+    return { success: true }
+  }catch(error) {
+    return { success: false, error: 'Error inesperado al editar el registro + '+ error };
   }
 }

@@ -20,8 +20,11 @@ import {
 import { RegistroSchema } from "./crear-registro-form"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { actualizarRegistro } from "@/lib/database/registro-actions"
+import {useRouter} from "next/navigation"
 
 export function EditRegistroForm({ registro }: { registro: Registro }) {
+  const router = useRouter();
   const form = useForm<z.infer<typeof RegistroSchema>>({
           resolver: zodResolver(RegistroSchema),
           defaultValues:{
@@ -39,10 +42,18 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const onSubmit = (values: z.infer<typeof RegistroSchema>) => {
+  const onSubmit = async (values: z.infer<typeof RegistroSchema>) => {
     console.log("Enviar a backend:", values);
     // Acá iría la llamada al backend
-  }
+    const res = await actualizarRegistro(values);
+
+    if (res.success) {
+      alert("Registro actualizado exitosamente!");
+      router.push(`/registro/${values.documento}`);
+    } else {
+      alert("Hubo un error al actualizar el registro.");
+    }
+  };
 
   return (
       <Form {...form}>

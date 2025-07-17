@@ -185,52 +185,28 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
   }
 }
 
-/**
- * Actualiza un registro existente
- * @param documento Documento del registro a actualizar
- * @param registro Nuevos datos del registro
- */
-export async function actualizarRegistro(documento: string, registro: Partial<Registro>): Promise<Registro | null> {
-  // Construimos la query dinámicamente basada en los campos proporcionados
-  const setClauses = [];
-  const values = [];
-  let paramIndex = 1;
-  
-  // Agregamos todos los campos que se desean actualizar
-  for (const [key, value] of Object.entries(registro)) {
-    if (key !== 'documento') { // No permitimos actualizar el documento ya que es PK
-      setClauses.push(`${key} = $${paramIndex}`);
-      values.push(value);
-      paramIndex++;
-    }
-  }
-  
-  // Si no hay campos para actualizar, retornamos null
-  if (setClauses.length === 0) {
-    return null;
-  }
-  
-  // Agregamos el documento como último parámetro para la cláusula WHERE
-  values.push(documento);
-  
-  const queryText = `
-    UPDATE registro 
-    SET ${setClauses.join(', ')} 
-    WHERE documento = $${paramIndex}
-    RETURNING *
-  `;
-  
-  const result = await query(queryText, values);
-  return result.rows.length > 0 ? result.rows[0] : null;
-}
-
-/**
- * Elimina un registro por su documento
- * @param documento Documento del registro a eliminar
- */
-export async function eliminarRegistro(documento: string): Promise<boolean> {
-  const queryText = 'DELETE FROM registro WHERE documento = $1 RETURNING documento';
-  const result = await query(queryText, [documento]);
-  
-  return result.rows.length > 0;
+export async function actualizarRegistroEnDB(registro: Registro) {
+  await query(
+    `UPDATE registro SET
+      tipo_documento = $1,
+      nombre = $2,
+      apellido = $3,
+      fecha_nacimiento = $4,
+      nacionalidad = $5,
+      domicilio_real = $6,
+      domicilio_eventual = $7,
+      observacion_cc = $8
+     WHERE documento = $9`,
+    [
+      registro.tipo_documento,
+      registro.nombre,
+      registro.apellido,
+      registro.fecha_nacimiento ?? null,
+      registro.nacionalidad ?? null,
+      registro.domicilio_real ?? null,
+      registro.domicilio_eventual ?? null,
+      registro.observacion_cc,
+      registro.documento,
+    ]
+  )
 }
