@@ -25,6 +25,9 @@ import {useRouter} from "next/navigation"
 
 export function EditRegistroForm({ registro }: { registro: Registro }) {
   const router = useRouter();
+
+  const documentoViejo = registro.documento; 
+
   const form = useForm<z.infer<typeof RegistroSchema>>({
           resolver: zodResolver(RegistroSchema),
           defaultValues:{
@@ -45,7 +48,7 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
   const onSubmit = async (values: z.infer<typeof RegistroSchema>) => {
     console.log("Enviar a backend:", values);
     // Acá iría la llamada al backend
-    const res = await actualizarRegistro(values);
+    const res = await actualizarRegistro(values, documentoViejo);
 
     if (res.success) {
       alert("Registro actualizado exitosamente!");

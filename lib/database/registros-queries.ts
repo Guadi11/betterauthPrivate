@@ -185,10 +185,11 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
   }
 }
 
-export async function actualizarRegistroEnDB(registro: Registro) {
+export async function actualizarRegistroEnDB(registro: Registro, documentoViejo: string) {
   await query(
     `UPDATE registro SET
       tipo_documento = $1,
+      documento = $9,
       nombre = $2,
       apellido = $3,
       fecha_nacimiento = $4,
@@ -196,7 +197,7 @@ export async function actualizarRegistroEnDB(registro: Registro) {
       domicilio_real = $6,
       domicilio_eventual = $7,
       observacion_cc = $8
-     WHERE documento = $9`,
+     WHERE documento = $10`,
     [
       registro.tipo_documento,
       registro.nombre,
@@ -207,6 +208,7 @@ export async function actualizarRegistroEnDB(registro: Registro) {
       registro.domicilio_eventual ?? null,
       registro.observacion_cc,
       registro.documento,
+      documentoViejo
     ]
   )
 }

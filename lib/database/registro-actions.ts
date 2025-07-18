@@ -39,10 +39,10 @@ export async function crearRegistro(data: z.infer<typeof RegistroSchema>) {
   }
 }
 
-export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>) {
+export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, documentoViejo: string) {
   try{
     const registro: Registro = {
-    documento: data.documento,
+      documento: data.documento,
       tipo_documento: data.tipo_documento,
       nombre: data.nombre,
       apellido: data.apellido,
@@ -53,7 +53,7 @@ export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>) {
       observacion_cc: data.observacion_cc
     }
 
-    await actualizarRegistroEnDB(registro)
+    await actualizarRegistroEnDB(registro, documentoViejo)
     revalidatePath(`/registro/${registro.documento}`)
 
     return { success: true }
