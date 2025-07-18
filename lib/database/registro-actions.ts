@@ -57,7 +57,23 @@ export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, d
     revalidatePath(`/registro/${registro.documento}`)
 
     return { success: true }
-  }catch(error) {
-    return { success: false, error: 'Error inesperado al editar el registro + '+ error };
+  } catch (error: unknown) {
+    const dbError = error as DatabaseError;
+    
+    if (dbError.code === '23503' && dbError.constraint === 'fk_documento') {
+      return {
+        success: false,
+        error: 'No se puede cambiar el documento porque existen ingresos asociados a este registro.'
+      };
+    }
+
+    if (dbError.code === '23505') {
+      return {
+        success: false,
+        error: 'Ya existe un registro con ese documento.'
+      };
+    }
+
+    return { success: false, error: 'Error inesperado al actualizar el registro.' };
   }
 }

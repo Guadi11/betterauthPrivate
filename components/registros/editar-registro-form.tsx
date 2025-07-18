@@ -54,7 +54,7 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
       alert("Registro actualizado exitosamente!");
       router.push(`/registro/${values.documento}`);
     } else {
-      alert("Hubo un error al actualizar el registro.");
+      alert(res.error);
     }
   };
 
