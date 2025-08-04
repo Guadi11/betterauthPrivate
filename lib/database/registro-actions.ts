@@ -1,7 +1,7 @@
 // app/actions/registro-actions.ts
 'use server'
 
-import { Registro, actualizarRegistroEnDB, insertarRegistro } from '@/lib/database/registros-queries';
+import { Registro, actualizarObservacionRegistroEnDB, actualizarRegistroEnDB, insertarRegistro } from '@/lib/database/registros-queries';
 import { RegistroSchema } from '@/components/registros/crear-registro-form'; 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -76,4 +76,16 @@ export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, d
 
     return { success: false, error: 'Error inesperado al actualizar el registro.' };
   }
+}
+
+export async function actualizarObservacionRegistro(documento:string, observacion:string){
+  try{
+    await actualizarObservacionRegistroEnDB(documento, observacion);
+    return {
+      success:true
+    };
+  }catch(error){
+    return{ success: false, error: 'Error inesperado al actualizar el registro.'+error }
+  }
+
 }

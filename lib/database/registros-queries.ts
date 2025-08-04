@@ -212,3 +212,15 @@ export async function actualizarRegistroEnDB(registro: Registro, documentoViejo:
     ]
   )
 }
+
+export async function actualizarObservacionRegistroEnDB(documento:string, observacion:string){
+  await query(
+    `UPDATE registro SET
+      observacion = $1
+    WHERE documento = $2`,
+    [
+      observacion,
+      documento
+    ]
+  )
+}
