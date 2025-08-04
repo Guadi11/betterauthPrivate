@@ -3,6 +3,7 @@
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -31,9 +32,9 @@ export default function SignInForm() {
       console.log("Server Response:", data, error);
 
       if (error) {
-        alert("Error: " + error.message);
+        toast.error("Error: " + error.message)
       } else {
-        alert("Inicio de sesión exitoso.");
+        toast.success("Inicio de sesion exitoso.");
         router.push("/"); // Redirigir después del login
         router.refresh(); // Recargar pagina principal asi se muestra la sidenav
       }
