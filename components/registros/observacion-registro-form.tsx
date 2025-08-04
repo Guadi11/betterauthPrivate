@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 
 // A definir en registro-actions.ts más adelante
@@ -28,16 +29,15 @@ export default function FormularioObservacion({ documento, valorInicial }: { doc
   })
 
   const [isPending, startTransition] = useTransition()
-  const [success, setSuccess] = useState<boolean | null>(null)
 
   function onSubmit(data: FormValues) {
-    startTransition(() => {
-      actualizarObservacionRegistro(data.documento, data.observacion).then((res) => {
-        setSuccess(res.success)
-        if (!res.success) {
-          form.setError("observacion", { message: res.error ?? "Error al guardar" })
-        }
-      })
+    startTransition(async () => {
+      const res = await actualizarObservacionRegistro(data.documento, data.observacion)
+      if (res.success) {
+        toast.success("Observación guardada correctamente")
+      } else {
+        toast.error("Error al guardar: " + (res.error ?? "Error inesperado"))
+      }
     })
   }
 
@@ -51,7 +51,7 @@ export default function FormularioObservacion({ documento, valorInicial }: { doc
             <FormItem>
               <FormLabel>Observación</FormLabel>
               <FormControl>
-                <Textarea placeholder="Observación, TODO" {...field} disabled={isPending} className="bg-yellow-50" />
+                <Textarea placeholder="Observación" {...field} disabled={isPending} className="bg-yellow-50" />
               </FormControl>
               <FormMessage />
             </FormItem>

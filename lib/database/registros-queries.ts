@@ -11,6 +11,7 @@ export interface Registro {
   nacionalidad?: string;
   domicilio_real?: string;
   domicilio_eventual?: string;
+  observacion?: string;
   observacion_cc?: boolean;
 }
 
