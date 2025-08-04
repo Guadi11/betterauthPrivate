@@ -22,6 +22,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { actualizarRegistro } from "@/lib/database/registro-actions"
 import {useRouter} from "next/navigation"
+import { toast } from "sonner"
 
 export function EditRegistroForm({ registro }: { registro: Registro }) {
   const router = useRouter();
@@ -51,10 +52,11 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
     const res = await actualizarRegistro(values, documentoViejo);
 
     if (res.success) {
-      alert("Registro actualizado exitosamente!");
+      toast.success("Registro actualizado exitosamente!");
       router.push(`/registro/${values.documento}`);
     } else {
       alert(res.error);
+      toast("Hubo un fallo al editar el registro: "+res.error);
     }
   };
 
