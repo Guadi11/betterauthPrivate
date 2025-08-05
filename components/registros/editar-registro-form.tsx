@@ -226,30 +226,40 @@ export function EditRegistroForm({ registro }: { registro: Registro }) {
               )}
             />
 
-            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-              <DialogTrigger asChild>
-                <Button type="button" className="mt-4">Guardar cambios</Button>
-              </DialogTrigger>
+            <div className="flex gap-4 mt-6">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => router.push(`/registro/${documentoViejo}`)}
+              >
+                Cancelar
+              </Button>
 
-              <DialogContent>
-                <DialogTitle>¿Confirmás que querés guardar los cambios?</DialogTitle>
-                <DialogDescription>
-                  Revise los datos antes de confirmar.
-                </DialogDescription>
+              <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <DialogTrigger asChild>
+                  <Button type="button" className="mx-4">Guardar cambios</Button>
+                </DialogTrigger>
 
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancelar</Button>
-                  <Button
-                    onClick={() => {
-                      form.handleSubmit(onSubmit)(); // ejecuta submit si es válido
-                      setConfirmOpen(false);         // cierra modal
-                    }}
-                  >
-                    Confirmar
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                <DialogContent>
+                  <DialogTitle>¿Confirmás que querés guardar los cambios?</DialogTitle>
+                  <DialogDescription>
+                    Revise los datos antes de confirmar.
+                  </DialogDescription>
+
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="secondary" onClick={() => setConfirmOpen(false)}>Cancelar</Button>
+                    <Button
+                      onClick={() => {
+                        form.handleSubmit(onSubmit)(); // ejecuta submit si es válido
+                        setConfirmOpen(false);         // cierra modal
+                      }}
+                    >
+                      Confirmar
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
         </form>
       </Form>
   )
