@@ -197,26 +197,6 @@ export default function DarIngreso() {
 
           <FormField
             control={form.control}
-            name="solicitante.identificador"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Identificador
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormDescription>
-                    Ingrese Matricula o DNI del solicitante. Sin guiones o puntos.
-                </FormDescription>
-                <FormControl>
-                  <Input placeholder="4984245" maxLength={8} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="solicitante.tipo_identificador"
             render={({ field }) => (
               <FormItem>
@@ -235,6 +215,26 @@ export default function DarIngreso() {
                     <SelectItem value="MR">MR</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="solicitante.identificador"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Identificador
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormDescription>
+                    Ingrese Matricula o DNI del solicitante. Sin guiones o puntos.
+                </FormDescription>
+                <FormControl>
+                  <Input placeholder="4984245" maxLength={8} {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
