@@ -8,6 +8,7 @@ CREATE TABLE registro (
     domicilio_real VARCHAR(255),
     domicilio_eventual VARCHAR(255),
     observacion_cc BOOLEAN DEFAULT FALSE,
+    observacion TEXT,
     
     CONSTRAINT check_documento 
         CHECK (
