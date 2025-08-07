@@ -25,7 +25,9 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { darIngreso } from "@/lib/database/ingreso-actions";
+import { verificarSolicitante } from "@/lib/database/solocitante-actions";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const ingresoSchema = z.object({
   lugar_visita: z.string().min(1, "Campo requerido"),
@@ -80,6 +82,33 @@ export default function DarIngreso() {
     const params = useParams<{ documento: string }>();
 
     const router = useRouter();
+
+    const [solicitanteExistente, setSolicitanteExistente] = useState(false);
+
+    useEffect(() => {
+      const chequear = async () => {
+        if (form.watch("solicitante.identificador").length >= 4) {
+          const existente = await verificarSolicitante(form.getValues("solicitante.identificador"));
+          setSolicitanteExistente(!!existente);
+          if (existente) {
+            form.setValue("solicitante.nombre", existente.nombre);
+            form.setValue("solicitante.jerarquia", existente.jerarquia);
+            form.setValue("solicitante.destino", existente.destino);
+            form.setValue("solicitante.telefono", existente.telefono);
+            form.setValue("solicitante.tipo_identificador", existente.tipo_identificador);
+          }
+        }
+      };
+
+      const suscripcion = form.watch((value, { name }) => {
+        if (name === "solicitante.identificador") {
+          chequear();
+        }
+      });
+
+      return () => suscripcion.unsubscribe();
+    }, [form]);
+
 
     const onSubmit = async (data: FormData) => {
       console.log(data);
@@ -250,7 +279,7 @@ export default function DarIngreso() {
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input {...field} maxLength={100}/>
+                  <Input disabled={solicitanteExistente} {...field} maxLength={100}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -267,7 +296,7 @@ export default function DarIngreso() {
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="CPMU" maxLength={6} {...field} />
+                  <Input disabled={solicitanteExistente} placeholder="CPMU" maxLength={6} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -284,7 +313,7 @@ export default function DarIngreso() {
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="SIAG" maxLength={8} {...field} />
+                  <Input disabled={solicitanteExistente} placeholder="SIAG" maxLength={8} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -301,7 +330,7 @@ export default function DarIngreso() {
                   <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="+54 2932 458791" maxLength={20} {...field} />
+                  <Input disabled={solicitanteExistente} placeholder="+54 2932 458791" maxLength={20} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
