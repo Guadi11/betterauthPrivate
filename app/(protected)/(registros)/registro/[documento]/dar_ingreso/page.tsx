@@ -8,7 +8,6 @@ import { useParams } from 'next/navigation'
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -25,9 +24,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { darIngreso } from "@/lib/database/ingreso-actions";
-import { verificarSolicitante } from "@/lib/database/solicitante-actions";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import SolicitanteSection from "@/components/solicitantes/seleccion-solicitante";
 
 const ingresoSchema = z.object({
   lugar_visita: z.string().min(1, "Campo requerido"),
@@ -82,33 +80,6 @@ export default function DarIngreso() {
     const params = useParams<{ documento: string }>();
 
     const router = useRouter();
-
-    const [solicitanteExistente, setSolicitanteExistente] = useState(false);
-
-    useEffect(() => {
-      const chequear = async () => {
-        if (form.watch("solicitante.identificador").length >= 4) {
-          const existente = await verificarSolicitante(form.getValues("solicitante.identificador"));
-          setSolicitanteExistente(!!existente);
-          if (existente) {
-            form.setValue("solicitante.nombre", existente.nombre);
-            form.setValue("solicitante.jerarquia", existente.jerarquia);
-            form.setValue("solicitante.destino", existente.destino);
-            form.setValue("solicitante.telefono", existente.telefono);
-            form.setValue("solicitante.tipo_identificador", existente.tipo_identificador);
-          }
-        }
-      };
-
-      const suscripcion = form.watch((value, { name }) => {
-        if (name === "solicitante.identificador") {
-          chequear();
-        }
-      });
-
-      return () => suscripcion.unsubscribe();
-    }, [form]);
-
 
     const onSubmit = async (data: FormData) => {
       console.log(data);
@@ -221,122 +192,7 @@ export default function DarIngreso() {
         </div>
 
         {/* Sección Solicitante */}
-        <div className="pt-4 border-t">
-          <h2 className="text-xl font-semibold">Datos del Solicitante</h2>
-
-          <FormField
-            control={form.control}
-            name="solicitante.tipo_identificador"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Tipo de Identificador
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccione tipo" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="DNI">DNI</SelectItem>
-                    <SelectItem value="MR">MR</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="solicitante.identificador"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Identificador
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormDescription>
-                    Ingrese Matricula o DNI del solicitante. Sin guiones o puntos.
-                </FormDescription>
-                <FormControl>
-                  <Input placeholder="4984245" maxLength={8} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="solicitante.nombre"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Nombre Completo
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input disabled={solicitanteExistente} {...field} maxLength={100}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="solicitante.jerarquia"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Jerarquía
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input disabled={solicitanteExistente} placeholder="CPMU" maxLength={6} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="solicitante.destino"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Destino
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input disabled={solicitanteExistente} placeholder="SIAG" maxLength={8} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="solicitante.telefono"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Teléfono
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <Input disabled={solicitanteExistente} placeholder="+54 2932 458791" maxLength={20} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <SolicitanteSection />
 
         <div className="flex justify-center mt-4">
           <Button type="submit">Dar Ingreso</Button>
