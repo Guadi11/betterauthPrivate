@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   FormField,
@@ -35,6 +35,7 @@ type FormData = {
 export default function SolicitanteSection() {
   const form = useFormContext<FormData>();
   const [solicitanteExistente, setSolicitanteExistente] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const chequear = async () => {
@@ -57,11 +58,15 @@ export default function SolicitanteSection() {
 
     const subscription = form.watch((_, { name }) => {
       if (name === "solicitante.identificador") {
-        chequear();
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(chequear, 300);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [form]);
 
   return (
@@ -106,7 +111,7 @@ export default function SolicitanteSection() {
               Ingrese Matrícula o DNI del solicitante. Sin guiones o puntos.
             </FormDescription>
             <FormControl>
-              <Input placeholder="4984245" maxLength={8} {...field} />
+              <Input inputMode="numeric" placeholder="4984245" maxLength={8} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
