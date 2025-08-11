@@ -25,7 +25,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { darIngreso } from "@/lib/database/ingreso-actions";
-import { verificarSolicitante } from "@/lib/database/solocitante-actions";
+import { verificarSolicitante } from "@/lib/database/solicitante-actions";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
