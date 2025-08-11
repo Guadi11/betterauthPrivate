@@ -36,6 +36,7 @@ export default function SolicitanteSection() {
   const form = useFormContext<FormData>();
   const [solicitanteExistente, setSolicitanteExistente] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const fueAutocompletadoRef = useRef(false);
 
   useEffect(() => {
     const chequear = async () => {
@@ -44,6 +45,7 @@ export default function SolicitanteSection() {
         const existente = await verificarSolicitante(id);
         setSolicitanteExistente(!!existente);
         if (existente) {
+          fueAutocompletadoRef.current = true;
           form.setValue("solicitante.nombre", existente.nombre);
           form.setValue("solicitante.jerarquia", existente.jerarquia);
           form.setValue("solicitante.destino", existente.destino);
@@ -52,7 +54,26 @@ export default function SolicitanteSection() {
             "solicitante.tipo_identificador",
             existente.tipo_identificador
           );
+        } else{
+            if (fueAutocompletadoRef.current) {
+                form.setValue("solicitante.nombre", "");
+                form.setValue("solicitante.jerarquia", "");
+                form.setValue("solicitante.destino", "");
+                form.setValue("solicitante.telefono", "");
+                fueAutocompletadoRef.current = false;
+            }
         }
+      }else{
+        // Si el ID es menor a 4, liberamos campos y dejamos que el usuario escriba
+        setSolicitanteExistente(false);
+        // Limpiamos solo si había sido autocompletado
+        if (fueAutocompletadoRef.current) {
+        form.setValue("solicitante.nombre", "");
+        form.setValue("solicitante.jerarquia", "");
+        form.setValue("solicitante.destino", "");
+        form.setValue("solicitante.telefono", "");
+        }
+        fueAutocompletadoRef.current = false;
       }
     };
 
@@ -103,10 +124,22 @@ export default function SolicitanteSection() {
         name={"solicitante.identificador" as const}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>
-              Identificador
-              <span className="text-red-500">*</span>
-            </FormLabel>
+                <div className="flex items-center justify-between gap-2">
+                    <FormLabel>
+                    Identificador <span className="text-red-500">*</span>
+                    </FormLabel>
+
+                    {solicitanteExistente && (
+                    <span
+                        className="inline-flex items-center rounded-full
+                                bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700
+                                ring-1 ring-inset ring-emerald-200
+                                dark:bg-emerald-900/40 dark:text-emerald-300 dark:ring-emerald-800"
+                    >
+                        ✓ Solicitan­te encontrado
+                    </span>
+                    )}
+                </div>
             <FormDescription>
               Ingrese Matrícula o DNI del solicitante. Sin guiones o puntos.
             </FormDescription>
