@@ -45,21 +45,21 @@ const solicitanteSchema = z.object({
   destino: z.string().min(1, "Campo requerido"),
   telefono: z.string().min(1, "Campo requerido"),
 }).superRefine((val, ctx) => {
-  const id = val.identificador ?? "";
+  const id = (val.identificador ?? "").trim();
   if (val.tipo_identificador === "DNI") {
-    if (!/^\d{7,8}$/.test(id)) {
+    if (!/^\d{8}$/.test(id)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["identificador"],
-        message: "DNI debe tener 7-8 dígitos numéricos. Sin Puntos.",
+        message: "DNI debe tener exactamente 8 dígitos (sin puntos).",
       });
     }
-  } else {
-    if (!/^[A-Z0-9]{1,8}$/.test(id)) {
+  } else { // MR
+    if (!/^\d{7}$/.test(id)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["identificador"],
-        message: "MR debe ser alfanumérico (A-Z, 0-9), máx 8. SIN GUION.",
+        message: "Matrícula (MR) debe tener exactamente 7 dígitos.",
       });
     }
   }
