@@ -100,12 +100,30 @@ export default function DarIngreso() {
 
     const router = useRouter();
 
+    // ➕ Agregá este import si lo necesitás
+// import { useState } from "react";
+
     const onSubmit = async (data: FormData) => {
-      console.log(data);
-        await darIngreso(params.documento, data);
-        router.refresh();
-        router.push(`/registro/${params.documento}`); 
+      const res = await darIngreso(params.documento, data);
+
+      if (!res?.ok) {
+        // Por campo específico
+        if (res.field && res.field !== 'root') {
+          // @ts-expect-error: path string válido para react-hook-form
+          form.setError(res.field, { type: 'server', message: res.message });
+          return;
+        }
+
+        // Error general (root)
+        form.setError('root', { type: 'server', message: res.message ?? 'Error al dar ingreso.' });
+        return;
+      }
+
+      // Éxito
+      router.refresh();
+      router.push(`/registro/${params.documento}`);
     };
+
 
     return (
     <Form {...form}>
@@ -212,7 +230,12 @@ export default function DarIngreso() {
 
         {/* Sección Solicitante */}
         <SolicitanteSection />
-
+              
+        {form.formState.errors.root?.message && (
+          <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+            {form.formState.errors.root.message}
+          </div>
+        )}
         <div className="flex justify-center mt-4">
           <Button type="submit">Dar Ingreso</Button>
         </div>
