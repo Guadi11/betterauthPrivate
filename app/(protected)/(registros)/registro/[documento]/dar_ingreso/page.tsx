@@ -100,9 +100,6 @@ export default function DarIngreso() {
 
     const router = useRouter();
 
-    // ➕ Agregá este import si lo necesitás
-// import { useState } from "react";
-
     const onSubmit = async (data: FormData) => {
       const res = await darIngreso(params.documento, data);
 
