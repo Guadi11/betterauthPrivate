@@ -1,4 +1,5 @@
 import DarIngresoButton from "@/components/ingresos/dar-entrada-button";
+import ConfeccionarPATBoton from "@/components/Pases/confeccionar-PAT-boton";
 import DatosDelRegistro from "@/components/registros/datos-del-registro";
 import { HistorialIngresos } from "@/components/registros/historial-ingresos";
 import FormularioObservacion from "@/components/registros/observacion-registro-form";
@@ -17,16 +18,17 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
 
   const ingresos : IngresoConSolicitante[] | null = await obtenerIngresosPorDocumento(documento);
   return (
-    <div>
-      <div className="flex">
-        <div className="w-full lg:w-1/2">
+    <div className="max-w-full overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-1/2 min-w-0">
           <DatosDelRegistro registro={registro}/>
         </div>
 
-        <div className="w-full lg:w-1/2 flex flex-col gap-4 px-6 py-4">
+        <div className="w-full lg:w-1/2 min-w-0 flex flex-col gap-4 px-4 md:px-6 py-4">
           <FormularioObservacion documento={registro.documento} valorInicial={registro.observacion ? registro.observacion : ""} />
-          <div className="flex flex-row gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
             <DarIngresoButton documento={documento} />
+            <ConfeccionarPATBoton documento={documento}/>
             <PatVencimiento />
           </div>
         </div>
