@@ -26,7 +26,7 @@ export default async function PaginaRegistro({ params }: { params: { documento: 
 
         <div className="w-full lg:w-1/2 min-w-0 flex flex-col gap-4 px-4 md:px-6 py-4">
           <FormularioObservacion documento={registro.documento} valorInicial={registro.observacion ? registro.observacion : ""} />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             <DarIngresoButton documento={documento} />
             <ConfeccionarPATBoton documento={documento}/>
             <PatVencimiento />
