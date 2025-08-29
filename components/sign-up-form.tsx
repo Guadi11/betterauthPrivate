@@ -5,18 +5,19 @@ import { authClient } from "@/lib/auth-client";
 import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 import { useState } from "react";
 
+const forgeInternalEmail = (username: string) =>
+  `${username.trim().toLowerCase()}@local.invalid`;
+
 const ROLES = {member: "Miembro", admin:"Administrador", owner:"Dueño"} as const;
 
 export default function SignUpForm() {
   const [form, setForm] = useState<{
-  email: string;
   name: string;
   username: string;
   password: string;
   organizationId: string;
   role: "admin" | "member" | "owner";
 }>({
-  email: "",
   name: "",
   username: "",
   password: "",
@@ -34,8 +35,10 @@ export default function SignUpForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+  const email = forgeInternalEmail(form.username);
+
   const {data, error} = await authClient.signUp.email({
-    email: form.email,
+    email,
     name: form.name,
     password: form.password,
     username: form.username
@@ -57,12 +60,6 @@ export default function SignUpForm() {
   return (
     <div className="w-full max-w-xs">
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">Email</label>
-          <input name="email" type="text" value={form.email} onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
-        </div>
-
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">Nombre</label>
           <input name="name" type="text" value={form.name} onChange={handleChange}
