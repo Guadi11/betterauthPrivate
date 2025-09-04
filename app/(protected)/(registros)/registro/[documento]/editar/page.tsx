@@ -1,13 +1,14 @@
 import { EditRegistroForm } from "@/components/registros/editar-registro-form"
 import { obtenerRegistroPorDocumento, Registro } from "@/lib/database/registros-queries"
 
-export default async function EditarRegistroPage({ params }: { params: { documento: string } }) {
-  const documento = params.documento;
+export default async function EditarRegistroPage({ params }: { params: Promise<{ documento: string }> }) {
+  const { documento } = await params;
+  const doc = decodeURIComponent(documento);
 
-  const registro: Registro | null = await obtenerRegistroPorDocumento(documento)
+  const registro: Registro | null = await obtenerRegistroPorDocumento(doc)
 
   if (!registro) {
-    return <div className="p-4 text-red-600">No se encontró el registro con el documento {documento}</div>
+    return <div className="p-4 text-red-600">No se encontró el registro con el documento {doc}</div>
   }
 
   return (
