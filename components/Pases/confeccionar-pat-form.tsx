@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // ⚠️ Ajustá la ruta según dónde tengas este archivo:
-import SolicitanteSection from "../solicitantes/seleccion-solicitante";
+import SolicitanteSection from "@/components/solicitantes/seleccion-solicitante";
 
 type PatTipo = "ZC" | "ZR" | "HN" | "PS" | "OT";
 
@@ -196,13 +196,26 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               name="pat.nro_interno"
               rules={{
                 required: "Requerido",
-                maxLength: { value: 5, message: "Máximo 5 caracteres" },
+                minLength: { value: 4, message: "Debe tener 4 a 5 dígitos" },
+                maxLength: { value: 5, message: "Debe tener 4 a 5 dígitos" },
+                pattern:  { value: /^\d{4,5}$/, message: "Solo dígitos (4 a 5)" },
               }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nro. Interno <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input inputMode="numeric" maxLength={5} placeholder="12345" {...field} />
+                    <Input
+                      type="text"
+                      inputMode="numeric"      // teclado numérico en mobile
+                      pattern="\d*"            // hint HTML; no reemplaza la validación
+                      maxLength={5}
+                      placeholder="12345"
+                      {...field}
+                      onChange={(e) => {
+                        const soloDigitos = e.target.value.replace(/\D/g, "").slice(0, 5);
+                        field.onChange(soloDigitos);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
