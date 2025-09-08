@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // ⚠️ Ajustá la ruta según dónde tengas este archivo:
 import SolicitanteSection from "@/components/solicitantes/seleccion-solicitante";
 
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 type PatTipo = "ZC" | "ZR" | "HN" | "PS" | "OT";
 
 type PatFormValues = {
@@ -46,6 +49,7 @@ interface Props {
 export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const today = useMemo(() => {
     const d = new Date();
@@ -97,11 +101,30 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
     startTransition(async () => {
       const res = await onSubmit(documento, values);
       if (!res.ok) {
-        setServerError(res.error || "Ocurrió un error al confeccionar el PAT.");
+        const msg =
+          (res as any)?.message ||
+          (res as any)?.error ||
+          "Ocurrió un error al confeccionar el PAT.";
+        setServerError(msg);
+        toast.error(msg);
         return;
       }
-      methods.reset({ ...methods.getValues(), pat: { ...methods.getValues().pat, acceso_pat: "", nro_interno: "", causa_motivo_pat: "" } });
-    });
+      // Limpieza de campos “textuales” del PAT (opcional)
+      methods.reset({
+        ...methods.getValues(),
+        pat: {
+          ...methods.getValues().pat,
+          acceso_pat: "",
+          nro_interno: "",
+          causa_motivo_pat: "",
+        },
+      });
+
+      // 1) Toast de éxito
+      toast.success("PAT confeccionado correctamente.");
+      // 2) Redirección al perfil del registro
+      router.push(`/registro/${encodeURIComponent(documento)}`);
+      });
   };
 
   return (

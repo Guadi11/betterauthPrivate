@@ -3,6 +3,7 @@
 
 import { insertarSolicitante, obtenerSolicitanteConId } from '@/lib/database/solicitante-queries';
 import { insertarPAT } from '@/lib/database/pat-queries'; // 👈 nuevo import
+import { isDatabaseError } from '@/lib/database/db';
 
 export type ConfeccionarPatInput = {
   pat: {
@@ -23,11 +24,24 @@ export type ConfeccionarPatInput = {
   };
 };
 
+type PgErrorMeta = {
+  code?: string;
+  constraint?: string | null;
+  detail?: string | null;
+};
+
+type PatOk = { ok: true };
+
+type PatError =
+  | { ok: false; type: 'required' | 'validation'; field: string; message: string; meta: null }
+  | { ok: false; type: 'fk_violation' | 'check_violation' | 'unique_violation' | 'desconocido'; field: string; message: string; meta: PgErrorMeta };
+
+export type ConfeccionarPatResult = PatOk | PatError;
 
 export async function confeccionarPAT(
   documento: string,
   data: ConfeccionarPatInput
-): Promise<{ ok: true } | { ok: false; type: string; field: string; message: string; meta?: any }> {
+): Promise<ConfeccionarPatResult> {
   try {
     // 0) Normalizar/validar todos los campos (obligatorios)
     const doc = documento?.trim();
@@ -108,19 +122,26 @@ export async function confeccionarPAT(
     });
 
     return { ok: true as const };
-  } catch (err: any) {
-    const pgCode = err?.code;
-    const constraint = err?.constraint;
+  } catch (err: unknown) {
+  if (isDatabaseError(err)) {
+    const pgCode = err.code;
+    const constraint = err.constraint as string | undefined; // si tu versión no lo tipa
+    const detail = err.detail as string | undefined;
 
     if (pgCode === '23503') {
-      return { ok: false as const, type: 'fk_violation', field: 'root', message: 'No se encontró el registro o solicitante en la base de datos.', meta: { code: pgCode, constraint, detail: err?.detail ?? null } };
+      return { ok: false, type: 'fk_violation', field: 'root', message: 'No se encontró el registro o solicitante en la base de datos.', meta: { code: pgCode, constraint, detail } };
     }
     if (pgCode === '23514') {
-      return { ok: false as const, type: 'check_violation', field: 'pat.fecha_vencimiento', message: 'Los datos no cumplen las restricciones (verificar fechas o tipo).', meta: { code: pgCode, constraint, detail: err?.detail ?? null } };
+      return { ok: false, type: 'check_violation', field: 'pat.fecha_vencimiento', message: 'Los datos no cumplen las restricciones (verificar fechas o tipo).', meta: { code: pgCode, constraint, detail } };
     }
     if (pgCode === '23505') {
-      return { ok: false as const, type: 'unique_violation', field: 'root', message: 'Ya existe un PAT con esos datos.', meta: { code: pgCode, constraint, detail: err?.detail ?? null } };
+      return { ok: false, type: 'unique_violation', field: 'root', message: 'Ya existe un PAT con esos datos.', meta: { code: pgCode, constraint, detail } };
     }
-    return { ok: false as const, type: 'desconocido', field: 'root', message: 'Ocurrió un error al confeccionar el PAT.', meta: { code: pgCode, constraint, detail: err?.detail ?? null } };
+
+    return { ok: false, type: 'desconocido', field: 'root', message: 'Ocurrió un error al confeccionar el PAT.', meta: { code: pgCode, constraint, detail } };
   }
+
+  // Error no-PG (runtime, etc.)
+  return { ok: false, type: 'desconocido', field: 'root', message: 'Ocurrió un error al confeccionar el PAT.', meta: { code: undefined, constraint: undefined, detail: String(err) } };
+}
 }

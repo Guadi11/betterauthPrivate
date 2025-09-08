@@ -1,5 +1,5 @@
-import { Pool, PoolClient } from "pg";
-
+//lib/database/db.ts
+import { DatabaseError, Pool, PoolClient } from "pg";
 
 export const pool = new Pool({
     user: 'postgres',
@@ -30,3 +30,8 @@ export async function getClient(): Promise<PoolClient> {
   export async function closePool() {
     await pool.end();
   }
+
+//Fucnion para utilizar en <tabla>-actions.ts para detectar error de db
+export function isDatabaseError(e: unknown): e is DatabaseError {
+  return typeof e === 'object' && e !== null && 'code' in e;
+}
