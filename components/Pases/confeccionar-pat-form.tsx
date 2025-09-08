@@ -34,16 +34,11 @@ type PatFormValues = {
   };
 };
 
+type SubmitResult = { ok: true } | { ok: false; message: string };
+
 interface Props {
-  documento: string; // viene del perfil/params
-  /**
-   * Acción que recibe (documento, values) y debe crear el PAT en la DB.
-   * Devolvé { ok: true } o { ok: false, error: "mensaje" }.
-   */
-  onSubmit: (
-    documento: string,
-    values: PatFormValues
-  ) => Promise<{ ok: boolean; error?: string }>;
+  documento: string;
+  onSubmit: (documento: string, values: PatFormValues) => Promise<SubmitResult>;
 }
 
 export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
@@ -99,26 +94,22 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
     values.pat.acceso_pat = values.pat.acceso_pat.trim();
 
     startTransition(async () => {
-      const res = await onSubmit(documento, values);
-      if (!res.ok) {
-        const msg =
-          (res as any)?.message ||
-          (res as any)?.error ||
-          "Ocurrió un error al confeccionar el PAT.";
-        setServerError(msg);
-        toast.error(msg);
-        return;
-      }
-      // Limpieza de campos “textuales” del PAT (opcional)
-      methods.reset({
-        ...methods.getValues(),
-        pat: {
-          ...methods.getValues().pat,
-          acceso_pat: "",
-          nro_interno: "",
-          causa_motivo_pat: "",
-        },
-      });
+  const res = await onSubmit(documento, values);
+  if (!res.ok) {
+    const msg = res.message;              // ✅ sin any
+    setServerError(msg);
+    toast.error(msg);
+    return;
+  }
+  methods.reset({
+    ...methods.getValues(),
+    pat: {
+      ...methods.getValues().pat,
+      acceso_pat: "",
+      nro_interno: "",
+      causa_motivo_pat: "",
+    },
+  });
 
       // 1) Toast de éxito
       toast.success("PAT confeccionado correctamente.");
