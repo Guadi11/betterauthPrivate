@@ -7,7 +7,6 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// ⚠️ Ajustá la ruta según dónde tengas este archivo:
 import SolicitanteSection from "@/components/solicitantes/seleccion-solicitante";
 
 import { useRouter } from "next/navigation";
