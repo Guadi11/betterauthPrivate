@@ -35,11 +35,28 @@ function formatDate(value: string | Date | null | undefined): string {
 }
 
 
-function esVigente(hastaISO: string | null | undefined) {
-  if (!hastaISO) return false;
-  const hoy = new Date();
-  const fin = new Date(`${hastaISO}T23:59:59`);
-  return fin.getTime() >= hoy.getTime();
+function esVigente(hasta: string | Date | null | undefined): boolean {
+  if (!hasta) return false;
+
+  // Normalizamos "hasta" a fin de día LOCAL
+  let end: Date;
+  if (hasta instanceof Date) {
+    end = new Date(hasta.getFullYear(), hasta.getMonth(), hasta.getDate(), 23, 59, 59, 999);
+  } else if (typeof hasta === "string") {
+    // Si viene 'YYYY-MM-DD' armamos una fecha local; si no, dejamos que Date parsee.
+    const m = hasta.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) {
+      const y = Number(m[1]), mo = Number(m[2]) - 1, d = Number(m[3]);
+      end = new Date(y, mo, d, 23, 59, 59, 999);
+    } else {
+      const tmp = new Date(hasta);
+      end = new Date(tmp.getFullYear(), tmp.getMonth(), tmp.getDate(), 23, 59, 59, 999);
+    }
+  } else {
+    return false;
+  }
+
+  return end.getTime() >= Date.now();
 }
 
 export default function TablaPatsDelRegistro({ data }: Props) {
