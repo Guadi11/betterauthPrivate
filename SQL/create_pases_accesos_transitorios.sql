@@ -6,7 +6,7 @@ CREATE TABLE pases_acceso_transitorio (
         CHECK (length(nro_interno) >= 4 AND length(nro_interno) <= 5 AND nro_interno ~ '^\d+$'),  -- Asegura que solo haya dígitos
     fecha_extension DATE NOT NULL,
     fecha_vencimiento DATE NOT NULL,
-    tipo_zona VARCHAR(2) NOT NULL CHECK (tipo_zona IN ('HN', 'ZN', 'ZR', 'PS', 'OT')),
+    tipo_zona VARCHAR(2) NOT NULL CHECK (tipo_zona IN ('HN', 'ZC', 'ZR', 'PS', 'OT')),
     acceso_pat VARCHAR(100) NOT NULL,
     causa_motivo_pat TEXT NOT NULL,
     codigo_de_seguridad VARCHAR(100) NOT NULL,
