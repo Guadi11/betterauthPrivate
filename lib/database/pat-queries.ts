@@ -94,3 +94,40 @@ export async function obtenerPATsPorDocumento(documento: string): Promise<PaseCo
   const result = await query(sql, [documento]);
   return result.rows as PaseConSolicitante[];
 }
+
+export interface PatConRegistro {
+  id: number;
+  documento_registro: string;
+  nro_interno: string;
+  fecha_vencimiento: string; // ISO
+  tipo_zona: "ZC" | "ZR" | "HN" | "PS" | "OT";
+  acceso_pat: string;
+  causa_motivo_pat: string;
+  codigo_de_seguridad: string;
+  // registro
+  registro_apellido: string;
+  registro_nombre: string;
+  registro_documento: string;
+}
+
+export async function obtenerPatConRegistroPorId(id_pat: number): Promise<PatConRegistro | null> {
+  const sql = `
+    SELECT
+      p.id,
+      p.documento_registro,
+      p.nro_interno,
+      p.fecha_vencimiento,
+      p.tipo_zona,
+      p.acceso_pat,
+      p.causa_motivo_pat,
+      p.codigo_de_seguridad,
+      r.apellido AS registro_apellido,
+      r.nombre   AS registro_nombre,
+      r.documento AS registro_documento
+    FROM pases_acceso_transitorio p
+    JOIN registros r ON r.documento = p.documento_registro
+    WHERE p.id = $1
+  `;
+  const { rows } = await query(sql, [id_pat]);
+  return rows[0] ?? null;
+}
