@@ -93,7 +93,7 @@ export const CrearDisenoSchema = z.object({
   alto_mm: z.number().positive(),
   dpi_previsualizacion: z.number().positive().optional(),
   lienzo_json: LienzoJsonSchema,       // <- objeto validado
-  estado: z.custom<EstadoDiseno>().optional(), // default: 'borrador'
+  estado: z.enum(["borrador", "publicado", "archivado"]) // default: 'borrador'
 });
 
 export const ActualizarDisenoSchema = z.object({
