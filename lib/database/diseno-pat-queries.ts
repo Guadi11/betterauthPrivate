@@ -136,7 +136,7 @@ export async function insertarRecursoDisenoPat(input: InsertarRecursoInput): Pro
   const sql = `
     INSERT INTO recurso_diseno_pat (diseno_id, nombre, mime_type, datos)
     VALUES ($1, $2, $3, $4)
-    RETURNING id, diseno_id, nombre, mime_type, created_at AS creado_en;
+    RETURNING id, diseno_id, nombre, mime_type, creado_en;
   `;
   const { rows } = await query(sql, [input.diseno_id, input.nombre, input.mime_type, input.datos]);
   return rows[0];
