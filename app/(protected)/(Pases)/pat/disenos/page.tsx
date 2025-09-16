@@ -1,5 +1,4 @@
 // app/(protected)/(pases)/pat/disenos/page.tsx
-import { assertRolPersonalPases } from "@/lib/server-action-helpers";
 import { listarDisenos, type DisenoPat } from "@/lib/database/diseno-pat-queries";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,6 @@ function toLocale(dt: string | null | undefined) {
 }
 
 export default async function Page() {
-  await assertRolPersonalPases();
   const disenos = await listarDisenos(); // Promise<DisenoPat[]>
 
   return (
@@ -40,7 +38,7 @@ export default async function Page() {
           <p className="text-sm text-muted-foreground">Gestioná y publicá diseños para la impresión de PAT.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/pat/crear">
+          <Link href="/pat/disenos/crear">
             <Button>Nuevo diseño</Button>
           </Link>
         </div>
