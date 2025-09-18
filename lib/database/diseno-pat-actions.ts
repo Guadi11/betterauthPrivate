@@ -89,9 +89,9 @@ const LienzoJsonSchema = z.object({
 // ---------- Schemas de acciones ----------
 export const CrearDisenoSchema = z.object({
   nombre: z.string().min(1),
-  ancho_mm: z.number().positive(),
-  alto_mm: z.number().positive(),
-  dpi_previsualizacion: z.number().positive().optional(),
+  ancho_mm: z.coerce.number().positive(),
+  alto_mm: z.coerce.number().positive(),
+  dpi_previsualizacion: z.coerce.number().positive().optional(),
   lienzo_json: LienzoJsonSchema,       // <- objeto validado
   estado: z.enum(["borrador", "publicado", "archivado"]) // default: 'borrador'
 });
