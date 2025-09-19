@@ -1,50 +1,66 @@
-// app/(protected)/(pases)/pat/disenos/page.tsx
-import { listarDisenos, type DisenoPat } from "@/lib/database/diseno-pat-queries";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+// app/(protected)/(Pases)/pat/disenos/page.tsx
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import RowActions from "./row-actions";
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table';
+import {
+  listarDisenos,
+  type DisenoPatListItem,
+} from '@/lib/database/diseno-pat-queries';
+import RowActions from './row-actions';
 
-function EstadoBadge({ estado }: { estado: DisenoPat["estado"] }) {
-  const variant =
-    estado === "publicado" ? "default" :
-    estado === "archivado" ? "destructive" : "secondary";
-  const label =
-    estado === "publicado" ? "Publicado" :
-    estado === "archivado" ? "Archivado" : "Borrador";
-  return <Badge variant={variant}>{label}</Badge>;
+function statusToBadgeVariant(
+  estado: DisenoPatListItem['estado'],
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  switch (estado) {
+    case 'publicado':
+      return 'default';
+    case 'borrador':
+      return 'secondary';
+    case 'archivado':
+      return 'outline';
+    default:
+      return 'secondary';
+  }
 }
 
-function toLocale(dt: string | null | undefined) {
-  if (!dt) return "—";
-  // Ajusta a tu TZ si tu Date viene en UTC: toLocaleString("es-AR", { ... })
-  return new Date(dt).toLocaleString("es-AR", {
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit",
-  });
+function formatSizeMM(w: number, h: number): string {
+  return `${w} x ${h} mm`;
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat('es-AR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(d);
 }
 
 export default async function Page() {
-  const disenos = await listarDisenos(); // Promise<DisenoPat[]>
+  const disenos: DisenoPatListItem[] = await listarDisenos();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Diseños de PAT</h1>
-          <p className="text-sm text-muted-foreground">Gestioná y publicá diseños para la impresión de PAT.</p>
+          <p className="text-sm text-muted-foreground">
+            Gestioná y publicá diseños para la impresión de PAT.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/pat/disenos/crear">
-            <Button>Nuevo diseño</Button>
-          </Link>
-        </div>
+        <Button asChild>
+          <Link href="/pat/disenos/crear">Nuevo diseño</Link>
+        </Button>
       </div>
 
-      <div className="rounded-xl border bg-card">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -59,22 +75,31 @@ export default async function Page() {
           <TableBody>
             {disenos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                  No hay diseños aún. Creá uno con el botón “Nuevo diseño”.
+                <TableCell
+                  colSpan={6}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No hay diseños aún. Creá uno con “Nuevo diseño”.
                 </TableCell>
               </TableRow>
-            ) : disenos.map((d) => (
-              <TableRow key={d.id}>
-                <TableCell className="font-medium">{d.nombre}</TableCell>
-                <TableCell>{d.ancho_mm}×{d.alto_mm} mm</TableCell>
-                <TableCell>{d.dpi_previsualizacion}</TableCell>
-                <TableCell><EstadoBadge estado={d.estado} /></TableCell>
-                <TableCell>{toLocale((d as any).actualizado_en ?? (d as any).creado_en)}</TableCell>
-                <TableCell className="text-right">
-                  <RowActions id={d.id} estado={d.estado} />
-                </TableCell>
-              </TableRow>
-            ))}
+            ) : (
+              disenos.map((d) => (
+                <TableRow key={d.id}>
+                  <TableCell>{d.nombre}</TableCell>
+                  <TableCell>{formatSizeMM(d.ancho_mm, d.alto_mm)}</TableCell>
+                  <TableCell>{d.dpi_previsualizacion}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusToBadgeVariant(d.estado)}>
+                      {d.estado}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(d.actualizado_en)}</TableCell>
+                  <TableCell className="text-right">
+                    <RowActions id={d.id} estado={d.estado} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
