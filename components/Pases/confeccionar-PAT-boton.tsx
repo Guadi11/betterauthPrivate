@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface Props { documento: string; }
 
 export default async function ConfeccionarPATBoton({ documento }: Props){
-  const organizationId = ORGANIZATION_IDS.PERSONAL_ESTABLECIMIENTOS_NAVALES;
+  const organizationId = ORGANIZATION_IDS.PERSONAL_PASES;
   const accessResult = await checkOrganizationAccess({ organizationId });
   if (!accessResult.authorized) return null;
 
