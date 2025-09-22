@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { insertarDisenoPat, type DisenoPatInsert } from '@/lib/database/diseno-pat-queries';
+import { actualizarDisenoPat, DisenoPatUpdateInput , insertarDisenoPat, type DisenoPatInsert } from '@/lib/database/diseno-pat-queries';
 import { DatabaseError } from 'pg';
 import { error } from 'console';
 
@@ -45,4 +45,13 @@ export async function publicarDisenoPatAction(id:number){
 export async function archivarDisenoPatAction(id:number){
   //TODO: implementar logica, ahora solo tira error.
   throw error;
+}
+
+export type GuardarDisenoPatInput = DisenoPatUpdateInput;
+
+export async function guardarDisenoPat(input: GuardarDisenoPatInput) {
+  // (Lugar ideal para autorización/roles, p.ej. PERSONAL_PASES)
+  // Validaciones adicionales de negocio si aplica
+  await actualizarDisenoPat(input);
+  return { ok: true as const };
 }
