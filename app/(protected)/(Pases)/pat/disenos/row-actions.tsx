@@ -7,12 +7,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  publicarDisenoPatAction,
-  archivarDisenoPatAction,
+  setEstadoDisenoPat,
 } from "@/lib/database/diseno-pat-actions";
 
 type Props = {
-  id: number;
+  id: string;
   estado: "borrador" | "publicado" | "archivado";
 };
 
@@ -23,7 +22,7 @@ export default function RowActions({ id, estado }: Props) {
   const onPublicar = () =>
     start(async () => {
       try {
-        await publicarDisenoPatAction(id);
+        await setEstadoDisenoPat(id,"publicado");
         toast.success("Diseño publicado");
         router.refresh();
       } catch (e) {
@@ -35,7 +34,7 @@ export default function RowActions({ id, estado }: Props) {
   const onArchivar = () =>
     start(async () => {
       try {
-        await archivarDisenoPatAction(id);
+        await setEstadoDisenoPat(id,"archivado");
         toast.success("Diseño archivado");
         router.refresh();
       } catch (e) {

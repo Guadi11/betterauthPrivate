@@ -1,3 +1,4 @@
+// components/Pases/diseno/crear-diseno-form.tsx
 'use client';
 
 import * as React from 'react';
@@ -8,32 +9,38 @@ import { useRouter } from 'next/navigation';
 
 import { authClient } from '@/lib/auth-client';
 import { crearDisenoPat } from '@/lib/database/diseno-pat-actions';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-
-// -------- Zod
-export const DisenoPatFormSchema = z.object({
-  nombre: z.string({ required_error: 'Ingresá un nombre.' }).trim().min(3, 'Mínimo 3.').max(100, 'Máximo 100.'),
-  ancho_mm: z.coerce.number({ required_error: 'Ingresá el ancho.' }).positive('> 0.').max(1000, 'Máx 1000.').multipleOf(0.01, 'Hasta 2 decimales.'),
-  alto_mm: z.coerce.number({ required_error: 'Ingresá el alto.' }).positive('> 0.').max(1000, 'Máx 1000.').multipleOf(0.01, 'Hasta 2 decimales.'),
-  dpi_previsualizacion: z.coerce.number({ required_error: 'Ingresá el DPI.' }).int('Entero.').min(72, '≥72.').max(1200, '≤1200.'),
-});
-export type DisenoPatFormValues = z.infer<typeof DisenoPatFormSchema>;
+import { disenoPatCoreSchema, estadoDisenoEnum } from '@/lib/pat/disenos/diseno-pat-schemas';
 
 // -------- Helpers sin any
-function pickUsername(sessionData: unknown): string {
+function pickUserId(sessionData: unknown): string {
   if (typeof sessionData !== 'object' || sessionData === null) return 'usuarioPruebaPases';
   const rec = sessionData as Record<string, unknown>;
   const user = rec.user as unknown;
   if (typeof user !== 'object' || user === null) return 'usuarioPruebaPases';
   const u = user as Record<string, unknown>;
+  const id = typeof u.id === 'string' && u.id.length > 0 ? u.id : null;
   const username = typeof u.username === 'string' && u.username.length > 0 ? u.username : null;
-  const displayUsername = typeof u.displayUsername === 'string' && u.displayUsername.length > 0 ? u.displayUsername : null;
-  const name = typeof u.name === 'string' && u.name.length > 0 ? u.name : null;
-  const email = typeof u.email === 'string' && u.email.length > 0 ? u.email : null;
-  return username ?? displayUsername ?? name ?? email ?? 'usuarioPruebaPases';
+  return id ?? username ?? 'usuarioPruebaPases';
+}
+
+const CrearSchema = disenoPatCoreSchema
+  .omit({ lienzo_json: true, estado: true })
+  .extend({
+    // mantenemos la UX actual del form
+    nombre: z.string().trim().min(3).max(100),
+    ancho_mm: z.coerce.number().positive().max(1000).multipleOf(0.01),
+    alto_mm: z.coerce.number().positive().max(1000).multipleOf(0.01),
+    dpi_previsualizacion: z.coerce.number().int().min(72).max(1200),
+  });
+
+export type DisenoPatFormValues = z.infer<typeof CrearSchema>;
+
+// mm → px con DPI
+function mmToPx(mm: number, dpi: number): number {
+  return Math.max(100, Math.round((mm / 25.4) * dpi));
 }
 
 export function CrearDisenoPatForm() {
@@ -42,7 +49,7 @@ export function CrearDisenoPatForm() {
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<DisenoPatFormValues>({
-    resolver: zodResolver(DisenoPatFormSchema),
+    resolver: zodResolver(CrearSchema),
     defaultValues: { nombre: '', ancho_mm: 120, alto_mm: 120, dpi_previsualizacion: 300 },
     mode: 'onBlur',
   });
@@ -54,28 +61,30 @@ export function CrearDisenoPatForm() {
 
   function onSubmit(values: DisenoPatFormValues) {
     startTransition(async () => {
-      const nowIso = new Date().toISOString();
-      const payload = {
-        ...values,
-        estado: 'borrador' as const,
-        lienzo_json: {
-          version: 1,
-          mm: { width: values.ancho_mm, height: values.alto_mm },
-          dpi: values.dpi_previsualizacion,
-          layers: [] as unknown[],
-          elements: [] as unknown[],
-        } as unknown,
-        creado_por: pickUsername(session),
-        creado_en: nowIso,
-        actualizado_en: nowIso,
-      };
+      // JSON inicial de Konva “puro” (Stage con una Layer):
+      const widthPx = mmToPx(values.ancho_mm, values.dpi_previsualizacion);
+      const heightPx = mmToPx(values.alto_mm, values.dpi_previsualizacion);
+      const initialKonvaJson = {
+        className: 'Stage',
+        attrs: { width: widthPx, height: heightPx },
+        children: [{ className: 'Layer', attrs: {} }],
+      } as const;
 
-      const res = await crearDisenoPat(payload);
+      const res = await crearDisenoPat({
+        nombre: values.nombre,
+        ancho_mm: values.ancho_mm,
+        alto_mm: values.alto_mm,
+        dpi_previsualizacion: values.dpi_previsualizacion,
+        lienzo_json: initialKonvaJson, // objeto → ::jsonb
+        estado: estadoDisenoEnum.enum.borrador,
+        // dejamos que la action ponga creado_por desde session si no lo enviamos
+        creado_por: pickUserId(session),
+        session, // para que action pueda tomar user.id si quisieras omitir el campo
+      });
+
       if (res.ok) {
-        // Redirigí donde prefieras (listado o editor):
         router.push('/pat/disenos'); // o `/pat/disenos/${res.id}/editar`
       } else {
-        // Podés reemplazar con toast
         console.error(res.error);
       }
     });

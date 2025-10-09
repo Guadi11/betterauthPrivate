@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import type { DisenoPat } from '@/lib/database/diseno-pat-queries';
+import type { DisenoPatRow as DisenoPat } from '@/lib//pat/disenos/diseno-pat-types';
 import { guardarDisenoPat } from '@/lib/database/diseno-pat-actions';
 import { subirRecursoDiseno } from '@/lib/database/diseno-recursos-actions';
 import { Button } from '@/components/ui/button';
