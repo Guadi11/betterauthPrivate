@@ -1,10 +1,12 @@
+// components/Pases/diseno/EditorDisenoPat.tsx
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import * as React from 'react';
+import { useCallback, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import type { DisenoPatRow as DisenoPat } from '@/lib//pat/disenos/diseno-pat-types';
+import type { DisenoPatRow as DisenoPat } from '@/lib/pat/disenos/diseno-pat-types';
 import { guardarDisenoPat } from '@/lib/database/diseno-pat-actions';
 import { subirRecursoDiseno } from '@/lib/database/diseno-recursos-actions';
 import { Button } from '@/components/ui/button';
@@ -12,7 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
 import EditorCanvasKonva from './EditorCanvasKonva';
-import KonvaJsonViewer from './KonvaJsonViewer';
+import CanvasToolbar from './editor/CanvasToolbar';
+import GridControls from './editor/GridControls';
+import VariablesPanel from './editor/VariablesPanel';
+import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
+import type { Vars } from '@/lib/pat/disenos/editor/vars';
 
 const DisenoSchema = z.object({
   id: z.string().min(1),
@@ -26,39 +32,14 @@ const DisenoSchema = z.object({
 
 type DisenoForm = z.infer<typeof DisenoSchema>;
 
-function resolveVarsInKonvaJson(jsonStr: string, vars: Record<string, unknown>): string {
-  try {
-    const obj = JSON.parse(jsonStr) as unknown;
-    const replacer = (node: unknown): void => {
-      if (!node || typeof node !== 'object') return;
-      const r = node as { className?: unknown; attrs?: unknown; children?: unknown };
-      if (r.className === 'Text' && r.attrs && typeof r.attrs === 'object') {
-        const a = r.attrs as Record<string, unknown>;
-        const original = typeof a.text === 'string' ? a.text : '';
-        const replaced = original.replace(/\$\{([a-zA-Z0-9_.]+)\}/g, (_m, p1) => {
-          const path = String(p1).split('.');
-          let current: unknown = vars;
-          for (const key of path) {
-            if (current && typeof current === 'object') {
-              current = (current as Record<string, unknown>)[key];
-            } else {
-              current = undefined;
-              break;
-            }
-          }
-          return current == null ? '' : String(current);
-        });
-        a.text = replaced;
-      }
-      if (Array.isArray(r.children)) r.children.forEach(replacer);
-    };
-    replacer(obj);
-    return JSON.stringify(obj);
-  } catch {
-    return jsonStr;
-  }
+// debounce simple
+function useDebouncedEffect(effect: () => void, deps: React.DependencyList, delayMs: number) {
+  React.useEffect(() => {
+    const id = window.setTimeout(effect, delayMs);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }
-
 
 export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
   const [jsonString, setJsonString] = useState<string>(
@@ -83,23 +64,32 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
   const mmAlto = form.watch('alto_mm');
   const dpi = form.watch('dpi_previsualizacion');
 
-  // Dummy variables para preview (podés reemplazar con inputs)
-  const [vars, setVars] = useState<Record<string, unknown>>({
+  // Grid + Snap UI state
+  const [gridStepMm, setGridStepMm] = useState<number>(1);
+  const [snapEnabled, setSnapEnabled] = useState<boolean>(false);
+
+  // Variables para futuros reemplazos (si querés usarlas luego en preview/export)
+  const [vars, setVars] = useState<Vars>({
     registro: { nombre: 'Juan', apellido: 'Pérez', documento: '12345678' },
     solicitante: { nombre: 'Cap. Gómez' },
   });
 
   const onCanvasChange = useCallback((newJson: string) => {
     setJsonString(newJson);
-    // mantenemos el form sincronizado
     try {
-      form.setValue('lienzo_json', JSON.parse(newJson) as unknown);
+      form.setValue('lienzo_json', JSON.parse(newJson) as unknown, { shouldDirty: true });
     } catch {
-      form.setValue('lienzo_json', newJson as unknown);
+      form.setValue('lienzo_json', newJson as unknown, { shouldDirty: true });
     }
   }, [form]);
 
-  const handleGuardar = async (values: DisenoForm) => {
+  // AUTOSAVE — guarda todo el form
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [lastSavedAt, setLastSavedAt] = useState<string>('');
+
+  const doSave = useCallback(async () => {
+    const values = form.getValues();
+    setIsSaving(true);
     try {
       await guardarDisenoPat({
         id: values.id,
@@ -110,16 +100,29 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
         estado: values.estado,
         lienzo_json: values.lienzo_json,
       });
-      toast.success('Diseño guardado');
+      setLastSavedAt(new Date().toLocaleTimeString());
     } catch (e) {
       console.error(e);
       toast.error('Error al guardar el diseño');
+    } finally {
+      setIsSaving(false);
+      form.reset(values);
     }
+  }, [form]);
+
+  useDebouncedEffect(() => {
+    if (!form.formState.isDirty) return;
+    if (isSaving) return;
+    void doSave();
+  }, [jsonString, mmAncho, mmAlto, dpi, form.formState.isDirty], 1200);
+
+  const handleGuardar = async () => {
+    await doSave();
+    toast.success('Diseño guardado');
   };
 
-  // Toolbar
-  const fileRef = useRef<HTMLInputElement | null>(null);
-  const dispatch = (name: 'editor:addRect'|'editor:addText'|'editor:addImage', detail?: unknown) =>
+  // Toolbar: subir imagen → inserta en canvas via evento
+  const dispatch = (name: (typeof EditorEvent)[keyof typeof EditorEvent], detail?: unknown) =>
     window.dispatchEvent(new CustomEvent(name, { detail }));
 
   const onUploadImage = async (file: File) => {
@@ -127,20 +130,21 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
     fd.set('diseno_id', diseno.id);
     fd.set('file', file);
     const res = await subirRecursoDiseno(fd);
-    // Insertar imagen en el canvas
-    dispatch('editor:addImage', { src: res.url });
+    dispatch(EditorEvent.ADD_IMAGE, { src: res.url });
   };
-
-  const resolvedJsonForPreview = useMemo(() => resolveVarsInKonvaJson(jsonString, vars), [jsonString, vars]);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-6">
-      {/* Panel izquierdo: formulario + toolbar */}
+      {/* Panel izquierdo: formulario + toolbar + grid + variables */}
       <div className="space-y-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleGuardar)} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); void handleGuardar(); }} className="space-y-4">
             <FormField name="nombre" control={form.control} render={({ field }) => (
-              <FormItem><FormLabel>Nombre</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              <FormItem>
+                <FormLabel>Nombre</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
             <div className="grid grid-cols-3 gap-3">
               <FormField name="ancho_mm" control={form.control} render={({ field }) => (
@@ -154,70 +158,41 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
               )} />
             </div>
 
-            <div className="flex gap-2">
-              <Button type="button" variant="secondary" onClick={() => dispatch('editor:addRect')}>Rectángulo</Button>
-              <Button type="button" variant="secondary" onClick={() => dispatch('editor:addText')}>Texto</Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.currentTarget.files?.[0];
-                  if (f) await onUploadImage(f);
-                  if (fileRef.current) fileRef.current.value = '';
-                }}
-              />
-              <Button type="button" variant="secondary" onClick={() => fileRef.current?.click()}>
-                Imagen…
-              </Button>
-            </div>
+            <CanvasToolbar onPickImage={onUploadImage} />
+            <GridControls
+              stepMm={gridStepMm}
+              snapEnabled={snapEnabled}
+              onChange={(next) => {
+                if (typeof next.stepMm === 'number') setGridStepMm(next.stepMm);
+                if (typeof next.snapEnabled === 'boolean') setSnapEnabled(next.snapEnabled);
+              }}
+            />
+            <VariablesPanel vars={vars} onChange={setVars} />
 
-            <Button type="submit" className="mt-2">Guardar</Button>
+            <div className="flex gap-3 items-center">
+              <Button type="submit" variant="default" disabled={isSaving}>
+                {isSaving ? 'Guardando…' : 'Guardar'}
+              </Button>
+              <div className="text-xs text-muted-foreground">
+                {isSaving ? 'Guardando cambios…' : (lastSavedAt ? `Autoguardado a las ${lastSavedAt}` : 'Sin cambios')}
+              </div>
+            </div>
           </form>
         </Form>
-
-        {/* Variables de preview rápidas */}
-        <div className="space-y-2">
-          <div className="text-sm text-muted-foreground">Variables de prueba (preview)</div>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              placeholder="Nombre"
-              defaultValue={String((vars.registro as { nombre?: unknown }).nombre ?? '')}
-              onChange={(e) => setVars(v => ({ ...v, registro: { ...(v.registro as Record<string, unknown>), nombre: e.target.value } }))}
-            />
-            <Input
-              placeholder="Apellido"
-              defaultValue={String((vars.registro as { apellido?: unknown }).apellido ?? '')}
-              onChange={(e) => setVars(v => ({ ...v, registro: { ...(v.registro as Record<string, unknown>), apellido: e.target.value } }))}
-            />
-          </div>
-        </div>
       </div>
 
-      {/* Panel derecho: Editor (izq) + Preview (der) */}
-      <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
-        <div>
-          <div className="text-sm text-muted-foreground mb-2">Editor</div>
-          <EditorCanvasKonva
-            json={jsonString}
-            mmAncho={mmAncho}
-            mmAlto={mmAlto}
-            dpi={dpi}
-            onChange={onCanvasChange}
-          />
-        </div>
-        <div>
-          <div className="text-sm text-muted-foreground mb-2">Vista previa (placeholders resueltos)</div>
-          <div className="rounded-xl border p-2 bg-muted">
-            <KonvaJsonViewer
-              lienzo={resolvedJsonForPreview}
-              mmAncho={mmAncho}
-              mmAlto={mmAlto}
-              dpi={dpi}
-            />
-          </div>
-        </div>
+      {/* Panel derecho: SOLO editor */}
+      <div>
+        <div className="text-sm text-muted-foreground mb-2">Editor</div>
+        <EditorCanvasKonva
+          json={jsonString}
+          mmAncho={mmAncho}
+          mmAlto={mmAlto}
+          dpi={dpi}
+          gridStepMm={gridStepMm}
+          snapEnabled={snapEnabled}
+          onChange={onCanvasChange}
+        />
       </div>
     </div>
   );
