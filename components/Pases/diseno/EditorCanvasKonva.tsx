@@ -6,6 +6,7 @@ import Konva from 'konva';
 import { z } from 'zod';
 import { gridStepPx, mmToPx } from '@/lib/pat/disenos/editor/units';
 import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
+import type { VariableKey } from '@/lib/pat/disenos/editor/vars';
 
 const JsonInput = z.union([z.string(), z.record(z.string(), z.unknown())]);
 
@@ -17,12 +18,9 @@ function toJsonString(input: unknown): string {
 }
 
 function findOrCreateEditableLayer(stage: Konva.Stage): Konva.Layer {
-  // Buscar la primera Layer que NO sea la de grilla
   const layers = stage.getLayers();
   const editable = layers.find((l) => !l.hasName('__gridLayer__'));
   if (editable) return editable;
-
-  // Si no hay ninguna (caso extremo), crear una nueva
   const layer = new Konva.Layer();
   stage.add(layer);
   return layer;
@@ -48,12 +46,9 @@ function hydrateImages(stage: Konva.Stage) {
   });
 }
 
-// Capa de grilla usando un Konva.Shape con sceneFunc (rápido y liviano)
 function createOrUpdateGrid(stage: Konva.Stage, stepPx: number) {
-  // eliminamos cualquier grid anterior
   stage.find('.__grid__').forEach((n) => n.destroy());
-
-  if (stepPx < 2) return; // no dibujar grillas demasiado densas
+  if (stepPx < 2) return;
 
   const grid = new Konva.Shape({
     name: '__grid__',
@@ -61,12 +56,10 @@ function createOrUpdateGrid(stage: Konva.Stage, stepPx: number) {
     sceneFunc: (ctx, shape) => {
       const { width, height } = stage.size();
       ctx.beginPath();
-      // líneas verticales
       for (let x = 0; x <= width; x += stepPx) {
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
       }
-      // líneas horizontales
       for (let y = 0; y <= height; y += stepPx) {
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
@@ -79,7 +72,6 @@ function createOrUpdateGrid(stage: Konva.Stage, stepPx: number) {
     },
   });
 
-  // insertamos una capa al principio
   const bgLayer = new Konva.Layer({ listening: false, name: '__gridLayer__' });
   bgLayer.add(grid);
   stage.add(bgLayer);
@@ -89,6 +81,67 @@ function createOrUpdateGrid(stage: Konva.Stage, stepPx: number) {
 
 function roundToStep(v: number, step: number): number {
   return Math.round(v / step) * step;
+}
+
+// --- Helpers de edición de texto (textarea overlay)
+function createTextareaForTextNode(
+  container: HTMLDivElement,
+  stage: Konva.Stage,
+  textNode: Konva.Text,
+  onCommit: (value: string) => void,
+  onCancel: () => void,
+): HTMLTextAreaElement {
+  const ta = document.createElement('textarea');
+  ta.value = textNode.text();
+  ta.style.position = 'absolute';
+  ta.style.zIndex = '10';
+  ta.style.resize = 'none';
+  ta.style.border = '1px solid #999';
+  ta.style.outline = 'none';
+  ta.style.padding = '4px 6px';
+  ta.style.background = 'white';
+  ta.style.fontFamily = textNode.fontFamily() || 'inherit';
+  ta.style.fontSize = `${textNode.fontSize()}px`;
+  ta.style.lineHeight = `${textNode.lineHeight()}`;
+  ta.style.letterSpacing = `${textNode.letterSpacing()}px`;
+  ta.style.transformOrigin = 'left top';
+
+  // posición absoluta acorde a transformaciones del Stage
+  const textPosition = textNode.absolutePosition();
+  const stageBox = stage.container().getBoundingClientRect();
+  const areaPosition = {
+    x: stageBox.left + textPosition.x,
+    y: stageBox.top + textPosition.y,
+  };
+  ta.style.left = `${areaPosition.x}px`;
+  ta.style.top = `${areaPosition.y}px`;
+  ta.style.width = `${textNode.width()}px`;
+  ta.style.height = `${textNode.height() || textNode.fontSize() * 1.4}px`;
+
+  document.body.appendChild(ta);
+  ta.focus();
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || e.shiftKey)) {
+      // permitir saltos de línea con Enter normal
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+      ta.remove();
+    }
+  };
+
+  const handleBlur = () => {
+    onCommit(ta.value);
+    ta.remove();
+  };
+
+  ta.addEventListener('keydown', handleKeyDown);
+  ta.addEventListener('blur', handleBlur);
+
+  return ta;
 }
 
 export default function EditorCanvasKonva({
@@ -112,17 +165,21 @@ export default function EditorCanvasKonva({
   const stageRef = useRef<Konva.Stage | null>(null);
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const [isShiftPressed, setIsShiftPressed] = useState<boolean>(false);
+  const [isEditingText, setIsEditingText] = useState<boolean>(false);
 
   const jsonString = useMemo(() => toJsonString(json), [json]);
-
   const widthPx = Math.max(100, mmToPx(mmAncho, dpi));
   const heightPx = Math.max(100, mmToPx(mmAlto, dpi));
   const stepPx = Math.max(1, gridStepPx(gridStepMm, dpi));
 
-  // teclado: Shift invierte el snap (si está ON lo apaga, si está OFF lo enciende)
+  // teclado: Shift invierte el snap
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') setIsShiftPressed(true);
+      // borrar selección con Del/Backspace (si no estamos editando texto)
+      if (!isEditingText && (e.key === 'Delete' || e.key === 'Backspace')) {
+        window.dispatchEvent(new CustomEvent(EditorEvent.DELETE_SELECTED));
+      }
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') setIsShiftPressed(false);
@@ -133,26 +190,20 @@ export default function EditorCanvasKonva({
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, []);
+  }, [isEditingText]);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Destruir previo
     stageRef.current?.destroy();
     transformerRef.current = null;
 
-    // Crear desde JSON
     const stage = Konva.Node.create(jsonString, containerRef.current) as Konva.Stage;
     stage.size({ width: widthPx, height: heightPx });
 
-    // Grilla
     createOrUpdateGrid(stage, stepPx);
-
-    // Hidratar imágenes
     hydrateImages(stage);
 
-    // Transformer
     const layer = findOrCreateEditableLayer(stage);
     const tr = new Konva.Transformer({
       rotateEnabled: true,
@@ -178,33 +229,69 @@ export default function EditorCanvasKonva({
       layer.draw();
     });
 
+    // Doble clic para editar texto (solo nodos Text que NO sean variables)
+    stage.on('dblclick dbltap', (e) => {
+      const node = e.target as Konva.Node;
+      if (node.getClassName() !== 'Text') return;
+
+      const txt = node as Konva.Text;
+      const isVariable = Boolean(txt.getAttr('__kind') === 'variable');
+      if (isVariable) return; // las variables no se editan inline
+
+      if (!containerRef.current) return;
+      setIsEditingText(true);
+
+      const ta = createTextareaForTextNode(
+        containerRef.current,
+        stage,
+        txt,
+        (value) => {
+          txt.text(value);
+          txt.getLayer()?.batchDraw();
+          onChange(stage.toJSON());
+          setIsEditingText(false);
+        },
+        () => {
+          setIsEditingText(false);
+        },
+      );
+
+      // impedir que el DEL borre el nodo mientras escribís
+      ta.addEventListener('keydown', (ke: KeyboardEvent) => {
+        if (ke.key === 'Delete' || ke.key === 'Backspace') {
+          ke.stopPropagation();
+        }
+      });
+    });
+
     // Snap helpers
     const shouldSnap = () => {
-      // si snapEnabled es true, Shift lo apaga; si es false, Shift lo enciende
       return snapEnabled ? !isShiftPressed : isShiftPressed;
     };
 
-    // Cambios (drag/transform) + snap en *end* (evita jitter)
+    // Cambios + snap en end
     stage.on('dragend transformend', (evt) => {
       if (!shouldSnap()) {
         onChange(stage.toJSON());
         return;
       }
       const node = evt.target as Konva.Node;
-      const nAny = node as unknown as { x?: () => number; y?: () => number; width?: () => number; height?: () => number; setAttrs?: (a: Record<string, unknown>) => void; };
+      const nAny = node as unknown as {
+        x?: () => number; y?: () => number; width?: () => number; height?: () => number;
+        setAttrs?: (a: Record<string, unknown>) => void;
+      };
       const current = {
         x: typeof nAny.x === 'function' ? nAny.x() : undefined,
         y: typeof nAny.y === 'function' ? nAny.y() : undefined,
         width: typeof nAny.width === 'function' ? nAny.width() : undefined,
         height: typeof nAny.height === 'function' ? nAny.height() : undefined,
       };
-
       const next: Record<string, unknown> = {};
       if (typeof current.x === 'number') next.x = roundToStep(current.x, stepPx);
       if (typeof current.y === 'number') next.y = roundToStep(current.y, stepPx);
       if (typeof current.width === 'number' && current.width > 0) next.width = Math.max(stepPx, roundToStep(current.width, stepPx));
       if (typeof current.height === 'number' && current.height > 0) next.height = Math.max(stepPx, roundToStep(current.height, stepPx));
-      if (node && typeof (node as { setAttrs?: (a: Record<string, unknown>) => void }).setAttrs === 'function') {
+      if (typeof (node as { setAttrs?: (a: Record<string, unknown>) => void }).setAttrs === 'function') {
         (node as { setAttrs: (a: Record<string, unknown>) => void }).setAttrs(next);
       }
       node.getLayer()?.draw();
@@ -218,10 +305,10 @@ export default function EditorCanvasKonva({
       stageRef.current = null;
       transformerRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jsonString, widthPx, heightPx, stepPx, snapEnabled, isShiftPressed]);
 
-  // Helpers para toolbar (eventos globales)
+  // Eventos globales (ADD_RECT / ADD_TEXT / ADD_IMAGE / ADD_VARIABLE / DELETE_SELECTED)
   useEffect(() => {
     function addRect() {
       const stage = stageRef.current; if (!stage) return;
@@ -231,14 +318,19 @@ export default function EditorCanvasKonva({
       (transformerRef.current)?.nodes([rect]);
       onChange(stage.toJSON());
     }
+
     function addText() {
       const stage = stageRef.current; if (!stage) return;
       const layer = findOrCreateEditableLayer(stage);
-      const text = new Konva.Text({ x: 60, y: 60, text: 'Nuevo texto ${registro.apellido}', fontSize: 18, draggable: true });
+      const text = new Konva.Text({
+        x: 60, y: 60, text: 'Nuevo texto', fontSize: 18, draggable: true,
+        align: 'left', width: 200, wrap: 'word',
+      });
       layer.add(text); layer.draw();
       (transformerRef.current)?.nodes([text]);
       onChange(stage.toJSON());
     }
+
     function addImage(ev: Event) {
       const stage = stageRef.current; if (!stage) return;
       const layer = findOrCreateEditableLayer(stage);
@@ -263,14 +355,74 @@ export default function EditorCanvasKonva({
       });
     }
 
+    function addVariable(ev: Event) {
+      const stage = stageRef.current; if (!stage) return;
+      const layer = findOrCreateEditableLayer(stage);
+      const detail = (ev as CustomEvent<unknown>).detail;
+      if (!detail || typeof detail !== 'object') return;
+
+      const rec = detail as Record<string, unknown>;
+      const key = rec.key as VariableKey | undefined;
+      if (!key) return;
+
+      const labelByKey: Record<VariableKey, string> = {
+        nro_interno: 'Nº interno',
+        zona: 'Zona',
+        acceso: 'Acceso',
+        apellido_nombre: 'Apellido y Nombre',
+        tipo_documento: 'Tipo documento',
+        nro_documento: 'Nº documento',
+        fecha_vencimiento: 'Fecha vencimiento',
+        motivo: 'Motivo',
+        codigo_seguridad: 'Código de seguridad',
+      };
+
+      const text = new Konva.Text({
+        x: 90, y: 90, text: labelByKey[key], fontSize: 16, draggable: true,
+        align: 'left', width: 220, wrap: 'word',
+      });
+
+      // Marcar como variable
+      text.setAttrs({
+        __kind: 'variable',
+        varKey: key,
+      });
+
+      layer.add(text); layer.draw();
+      (transformerRef.current)?.nodes([text]);
+      onChange(stage.toJSON());
+    }
+
+    function deleteSelected() {
+      const stage = stageRef.current; if (!stage) return;
+      const tr = transformerRef.current; if (!tr) return;
+      const nodes = tr.nodes();
+      if (nodes.length === 0) return;
+
+      // No eliminar grilla ni capas, solo shapes
+      const deletable = nodes.filter((n) => {
+        if (n.getClassName() === 'Layer' || n.hasName('__gridLayer__')) return false;
+        return true;
+      });
+
+      deletable.forEach((n) => n.destroy());
+      tr.nodes([]);
+      stage.draw();
+      onChange(stage.toJSON());
+    }
+
     window.addEventListener(EditorEvent.ADD_RECT, addRect as EventListener);
     window.addEventListener(EditorEvent.ADD_TEXT, addText as EventListener);
     window.addEventListener(EditorEvent.ADD_IMAGE, addImage as EventListener);
+    window.addEventListener(EditorEvent.ADD_VARIABLE, addVariable as EventListener);
+    window.addEventListener(EditorEvent.DELETE_SELECTED, deleteSelected as EventListener);
 
     return () => {
       window.removeEventListener(EditorEvent.ADD_RECT, addRect as EventListener);
       window.removeEventListener(EditorEvent.ADD_TEXT, addText as EventListener);
       window.removeEventListener(EditorEvent.ADD_IMAGE, addImage as EventListener);
+      window.removeEventListener(EditorEvent.ADD_VARIABLE, addVariable as EventListener);
+      window.removeEventListener(EditorEvent.DELETE_SELECTED, deleteSelected as EventListener);
     };
   }, [onChange]);
 

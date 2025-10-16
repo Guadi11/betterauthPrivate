@@ -4,6 +4,8 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { VARIABLE_CATALOG } from '@/lib/pat/disenos/editor/variable-catalog';
 
 interface Props {
   onPickImage: (file: File) => Promise<void>;
@@ -26,6 +28,7 @@ export default function CanvasToolbar({ onPickImage }: Props) {
       <Button type="button" variant="secondary" onClick={() => dispatch(EditorEvent.ADD_RECT)}>
         Rectángulo
       </Button>
+
       <Button type="button" variant="secondary" onClick={() => dispatch(EditorEvent.ADD_TEXT)}>
         Texto
       </Button>
@@ -39,6 +42,32 @@ export default function CanvasToolbar({ onPickImage }: Props) {
       />
       <Button type="button" variant="secondary" onClick={() => fileRef.current?.click()}>
         Imagen…
+      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" variant="secondary">Variables</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Insertar variable</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {VARIABLE_CATALOG.map(v => (
+            <DropdownMenuItem
+              key={v.key}
+              onClick={() => dispatch(EditorEvent.ADD_VARIABLE, { key: v.key })}
+            >
+              {v.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Button
+        type="button"
+        variant="destructive"
+        onClick={() => dispatch(EditorEvent.DELETE_SELECTED)}
+      >
+        Eliminar
       </Button>
     </div>
   );
