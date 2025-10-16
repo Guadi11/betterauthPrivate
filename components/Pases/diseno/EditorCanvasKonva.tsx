@@ -242,7 +242,7 @@ export default function EditorCanvasKonva({
 
       const text = new Konva.Text({
         x: 60, y: 60, text: initial, fontSize: 18, draggable: true,
-        align: 'left', width: 200, wrap: 'none',
+        align: 'justify', wrap: 'none',
       });
       layer.add(text); layer.draw();
       (transformerRef.current)?.nodes([text]);
