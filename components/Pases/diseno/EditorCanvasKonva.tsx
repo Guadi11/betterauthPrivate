@@ -221,7 +221,7 @@ export default function EditorCanvasKonva({
     function addRect() {
       const stage = stageRef.current; if (!stage) return;
       const layer = findOrCreateEditableLayer(stage);
-      const rect = new Konva.Rect({ x: 50, y: 50, width: 120, height: 80, fill: '#red', stroke: '#222', strokeWidth: 1, draggable: true });
+      const rect = new Konva.Rect({ x: 50, y: 50, width: 120, height: 80, stroke: '#222', strokeWidth: 1, draggable: true });
       layer.add(rect); layer.draw();
       (transformerRef.current)?.nodes([rect]);
       onChange(stage.toJSON());
