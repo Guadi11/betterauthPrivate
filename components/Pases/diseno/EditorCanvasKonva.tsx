@@ -10,11 +10,15 @@ import type { VariableKey } from '@/lib/pat/disenos/editor/vars';
 
 const JsonInput = z.union([z.string(), z.record(z.string(), z.unknown())]);
 
-function toJsonString(input: unknown): string {
+function toJsonStringSafe(input: unknown, stage: Konva.Stage | null | undefined): string {
   const parsed = JsonInput.safeParse(input);
-  if (!parsed.success) return '{"className":"Stage","attrs":{"width":400,"height":300},"children":[{"className":"Layer","attrs":{}}]}';
-  if (typeof parsed.data === 'string') return parsed.data;
-  try { return JSON.stringify(parsed.data); } catch { return '{"className":"Stage","attrs":{"width":400,"height":300},"children":[{"className":"Layer","attrs":{}}]}'; }
+  if (parsed.success) {
+    if (typeof parsed.data === 'string') return parsed.data;
+    try { return JSON.stringify(parsed.data); } catch { /* continue to fallback */ }
+  }
+  const current = stage?.toJSON();
+  if (typeof current === 'string' && current.length > 0) return current;
+  return '{"className":"Stage","attrs":{"width":400,"height":300},"children":[{"className":"Layer","attrs":{}}]}';
 }
 
 function findOrCreateEditableLayer(stage: Konva.Stage): Konva.Layer {
@@ -83,66 +87,6 @@ function roundToStep(v: number, step: number): number {
   return Math.round(v / step) * step;
 }
 
-// --- Helpers de edición de texto (textarea overlay)
-function createTextareaForTextNode(
-  container: HTMLDivElement,
-  stage: Konva.Stage,
-  textNode: Konva.Text,
-  onCommit: (value: string) => void,
-  onCancel: () => void,
-): HTMLTextAreaElement {
-  const ta = document.createElement('textarea');
-  ta.value = textNode.text();
-  ta.style.position = 'absolute';
-  ta.style.zIndex = '10';
-  ta.style.resize = 'none';
-  ta.style.border = '1px solid #999';
-  ta.style.outline = 'none';
-  ta.style.padding = '4px 6px';
-  ta.style.background = 'white';
-  ta.style.fontFamily = textNode.fontFamily() || 'inherit';
-  ta.style.fontSize = `${textNode.fontSize()}px`;
-  ta.style.lineHeight = `${textNode.lineHeight()}`;
-  ta.style.letterSpacing = `${textNode.letterSpacing()}px`;
-  ta.style.transformOrigin = 'left top';
-
-  // posición absoluta acorde a transformaciones del Stage
-  const textPosition = textNode.absolutePosition();
-  const stageBox = stage.container().getBoundingClientRect();
-  const areaPosition = {
-    x: stageBox.left + textPosition.x,
-    y: stageBox.top + textPosition.y,
-  };
-  ta.style.left = `${areaPosition.x}px`;
-  ta.style.top = `${areaPosition.y}px`;
-  ta.style.width = `${textNode.width()}px`;
-  ta.style.height = `${textNode.height() || textNode.fontSize() * 1.4}px`;
-
-  document.body.appendChild(ta);
-  ta.focus();
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || e.shiftKey)) {
-      // permitir saltos de línea con Enter normal
-      return;
-    }
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      onCancel();
-      ta.remove();
-    }
-  };
-
-  const handleBlur = () => {
-    onCommit(ta.value);
-    ta.remove();
-  };
-
-  ta.addEventListener('keydown', handleKeyDown);
-  ta.addEventListener('blur', handleBlur);
-
-  return ta;
-}
 
 export default function EditorCanvasKonva({
   json,
@@ -165,9 +109,8 @@ export default function EditorCanvasKonva({
   const stageRef = useRef<Konva.Stage | null>(null);
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const [isShiftPressed, setIsShiftPressed] = useState<boolean>(false);
-  const [isEditingText, setIsEditingText] = useState<boolean>(false);
 
-  const jsonString = useMemo(() => toJsonString(json), [json]);
+  const jsonString = useMemo(() => toJsonStringSafe(json, stageRef.current), [json]);
   const widthPx = Math.max(100, mmToPx(mmAncho, dpi));
   const heightPx = Math.max(100, mmToPx(mmAlto, dpi));
   const stepPx = Math.max(1, gridStepPx(gridStepMm, dpi));
@@ -177,7 +120,7 @@ export default function EditorCanvasKonva({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') setIsShiftPressed(true);
       // borrar selección con Del/Backspace (si no estamos editando texto)
-      if (!isEditingText && (e.key === 'Delete' || e.key === 'Backspace')) {
+      if (e.key === 'Delete' || e.key === 'Backspace'){
         window.dispatchEvent(new CustomEvent(EditorEvent.DELETE_SELECTED));
       }
     };
@@ -190,7 +133,7 @@ export default function EditorCanvasKonva({
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [isEditingText]);
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -227,41 +170,6 @@ export default function EditorCanvasKonva({
       if (target.getClassName() === 'Transformer' || target.getClassName() === 'Layer') return;
       tr.nodes([target as Konva.Node]);
       layer.draw();
-    });
-
-    // Doble clic para editar texto (solo nodos Text que NO sean variables)
-    stage.on('dblclick dbltap', (e) => {
-      const node = e.target as Konva.Node;
-      if (node.getClassName() !== 'Text') return;
-
-      const txt = node as Konva.Text;
-      const isVariable = Boolean(txt.getAttr('__kind') === 'variable');
-      if (isVariable) return; // las variables no se editan inline
-
-      if (!containerRef.current) return;
-      setIsEditingText(true);
-
-      const ta = createTextareaForTextNode(
-        containerRef.current,
-        stage,
-        txt,
-        (value) => {
-          txt.text(value);
-          txt.getLayer()?.batchDraw();
-          onChange(stage.toJSON());
-          setIsEditingText(false);
-        },
-        () => {
-          setIsEditingText(false);
-        },
-      );
-
-      // impedir que el DEL borre el nodo mientras escribís
-      ta.addEventListener('keydown', (ke: KeyboardEvent) => {
-        if (ke.key === 'Delete' || ke.key === 'Backspace') {
-          ke.stopPropagation();
-        }
-      });
     });
 
     // Snap helpers
@@ -313,18 +221,28 @@ export default function EditorCanvasKonva({
     function addRect() {
       const stage = stageRef.current; if (!stage) return;
       const layer = findOrCreateEditableLayer(stage);
-      const rect = new Konva.Rect({ x: 50, y: 50, width: 120, height: 80, fill: '#ddd', stroke: '#222', strokeWidth: 1, draggable: true });
+      const rect = new Konva.Rect({ x: 50, y: 50, width: 120, height: 80, fill: '#red', stroke: '#222', strokeWidth: 1, draggable: true });
       layer.add(rect); layer.draw();
       (transformerRef.current)?.nodes([rect]);
       onChange(stage.toJSON());
     }
 
-    function addText() {
+    function addText(ev?: Event) {
       const stage = stageRef.current; if (!stage) return;
       const layer = findOrCreateEditableLayer(stage);
+
+      let initial = 'Nuevo texto';
+      const d = (ev as CustomEvent<unknown>)?.detail;
+      if (d && typeof d === 'object') {
+        const rec = d as Record<string, unknown>;
+        if (typeof rec.text === 'string' && rec.text.trim().length > 0) {
+          initial = rec.text.trim();
+        }
+      }
+
       const text = new Konva.Text({
-        x: 60, y: 60, text: 'Nuevo texto', fontSize: 18, draggable: true,
-        align: 'left', width: 200, wrap: 'word',
+        x: 60, y: 60, text: initial, fontSize: 18, draggable: true,
+        align: 'left', width: 200, wrap: 'none',
       });
       layer.add(text); layer.draw();
       (transformerRef.current)?.nodes([text]);
