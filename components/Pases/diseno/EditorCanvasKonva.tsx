@@ -8,6 +8,17 @@ import { gridStepPx, mmToPx } from '@/lib/pat/disenos/editor/units';
 import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
 import type { VariableKey } from '@/lib/pat/disenos/editor/vars';
 
+const TextStyleSchema = z.object({
+  fill: z.string().optional(),
+  fontStyle: z.enum(['normal', 'italic', 'bold', 'italic bold']).optional(),
+  textDecoration: z.enum(['underline', 'line-through', 'underline line-through']).optional(),
+}).partial();
+
+const AddTextDetailSchema = z.object({
+  text: z.string().optional(),
+  style: TextStyleSchema.optional(),
+});
+
 const JsonInput = z.union([z.string(), z.record(z.string(), z.unknown())]);
 
 function toJsonStringSafe(input: unknown, stage: Konva.Stage | null | undefined): string {
@@ -231,23 +242,42 @@ export default function EditorCanvasKonva({
       const stage = stageRef.current; if (!stage) return;
       const layer = findOrCreateEditableLayer(stage);
 
+      // Defaults
       let initial = 'Nuevo texto';
-      const d = (ev as CustomEvent<unknown>)?.detail;
-      if (d && typeof d === 'object') {
-        const rec = d as Record<string, unknown>;
-        if (typeof rec.text === 'string' && rec.text.trim().length > 0) {
-          initial = rec.text.trim();
+      const attrs: Partial<Konva.TextConfig> = {};
+
+      // Parseo seguro del payload (unknown) con Zod
+      const detailUnknown = (ev as CustomEvent<unknown>)?.detail;
+      const parsed = AddTextDetailSchema.safeParse(detailUnknown);
+      if (parsed.success) {
+        const { text, style } = parsed.data;
+        if (typeof text === 'string' && text.trim().length > 0) {
+          initial = text.trim();
+        }
+        if (style) {
+          if (typeof style.fill === 'string') attrs.fill = style.fill;
+          if (typeof style.fontStyle === 'string') attrs.fontStyle = style.fontStyle;
+          if (typeof style.textDecoration === 'string') attrs.textDecoration = style.textDecoration;
         }
       }
 
-      const text = new Konva.Text({
-        x: 60, y: 60, text: initial, fontSize: 18, draggable: true,
-        align: 'left', wrap: 'none',
+      const textNode = new Konva.Text({
+        x: 60,
+        y: 60,
+        text: initial,
+        fontSize: 18,
+        draggable: true,
+        align: 'justify',
+        wrap: 'none',
+        ...attrs, // <-- aplica estilos mapeados 1:1
       });
-      layer.add(text); layer.draw();
-      (transformerRef.current)?.nodes([text]);
+
+      layer.add(textNode);
+      layer.draw();
+      (transformerRef.current)?.nodes([textNode]);
       onChange(stage.toJSON());
     }
+
 
     function addImage(ev: Event) {
       const stage = stageRef.current; if (!stage) return;
