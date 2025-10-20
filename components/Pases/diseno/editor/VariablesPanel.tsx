@@ -10,7 +10,7 @@ interface Props {
   vars: Vars;
   onChange: (next: Vars) => void;
 }
-
+// TODO: Validar si queremos que esto quede en el editor
 export default function VariablesPanel({ vars, onChange }: Props) {
   const reg = vars.registro ?? {};
   return (

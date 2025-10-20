@@ -68,7 +68,7 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
   const [gridStepMm, setGridStepMm] = useState<number>(1);
   const [snapEnabled, setSnapEnabled] = useState<boolean>(false);
 
-  // Variables para futuros reemplazos (si querés usarlas luego en preview/export)
+  // TODO: VALIDAR SI ESTO QUEDA EN EL EDITOR -> Variables para futuros reemplazos (si querés usarlas luego en preview/export)
   const [vars, setVars] = useState<Vars>({
     registro: { nombre: 'Juan', apellido: 'Pérez', documento: '12345678' },
     solicitante: { nombre: 'Cap. Gómez' },
