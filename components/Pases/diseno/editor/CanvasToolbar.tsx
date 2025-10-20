@@ -63,10 +63,6 @@ export default function CanvasToolbar({ onPickImage }: Props) {
         Rectángulo
       </Button>
 
-      <Button type="button" variant="secondary" onClick={() => dispatch(EditorEvent.ADD_TEXT)}>
-        Texto
-      </Button>
-
       <input
         ref={fileRef}
         type="file"
