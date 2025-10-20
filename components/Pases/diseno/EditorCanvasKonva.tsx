@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { gridStepPx, mmToPx } from '@/lib/pat/disenos/editor/units';
 import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
 import type { VariableKey } from '@/lib/pat/disenos/editor/vars';
+import { cleanupStage, serializeStagePruned } from '@/helpers/konva-serialize';
 
 const TextStyleSchema = z.object({
   fill: z.string().optional(),
@@ -33,13 +34,13 @@ function toJsonStringSafe(input: unknown, stage: Konva.Stage | null | undefined)
 }
 
 function findOrCreateEditableLayer(stage: Konva.Stage): Konva.Layer {
-  const layers = stage.getLayers();
-  const editable = layers.find((l) => !l.hasName('__gridLayer__'));
-  if (editable) return editable;
-  const layer = new Konva.Layer();
+  const existing = stage.findOne('Layer.__editable__') as Konva.Layer | null;
+  if (existing) return existing;
+  const layer = new Konva.Layer({ name: '__editable__' });
   stage.add(layer);
   return layer;
 }
+
 
 function hydrateImages(stage: Konva.Stage) {
   const images = stage.find('Image');
@@ -63,6 +64,7 @@ function hydrateImages(stage: Konva.Stage) {
 
 function createOrUpdateGrid(stage: Konva.Stage, stepPx: number) {
   stage.find('.__grid__').forEach((n) => n.destroy());
+  stage.find('.__gridLayer__').forEach((n) => n.destroy());
   if (stepPx < 2) return;
 
   const grid = new Konva.Shape({
@@ -154,7 +156,7 @@ export default function EditorCanvasKonva({
 
     const stage = Konva.Node.create(jsonString, containerRef.current) as Konva.Stage;
     stage.size({ width: widthPx, height: heightPx });
-
+    cleanupStage(stage);
     createOrUpdateGrid(stage, stepPx);
     hydrateImages(stage);
 
@@ -191,7 +193,7 @@ export default function EditorCanvasKonva({
     // Cambios + snap en end
     stage.on('dragend transformend', (evt) => {
       if (!shouldSnap()) {
-        onChange(stage.toJSON());
+        onChange(serializeStagePruned(stage));
         return;
       }
       const node = evt.target as Konva.Node;
@@ -214,7 +216,7 @@ export default function EditorCanvasKonva({
         (node as { setAttrs: (a: Record<string, unknown>) => void }).setAttrs(next);
       }
       node.getLayer()?.draw();
-      onChange(stage.toJSON());
+      onChange(serializeStagePruned(stage));
     });
 
     stageRef.current = stage;
@@ -235,7 +237,7 @@ export default function EditorCanvasKonva({
       const rect = new Konva.Rect({ x: 50, y: 50, width: 120, height: 80, stroke: '#222', strokeWidth: 1, draggable: true });
       layer.add(rect); layer.draw();
       (transformerRef.current)?.nodes([rect]);
-      onChange(stage.toJSON());
+      onChange(serializeStagePruned(stage));
     }
 
     function addText(ev?: Event) {
@@ -275,7 +277,7 @@ export default function EditorCanvasKonva({
       layer.add(textNode);
       layer.draw();
       (transformerRef.current)?.nodes([textNode]);
-      onChange(stage.toJSON());
+      onChange(serializeStagePruned(stage));
     }
 
 
@@ -299,7 +301,7 @@ export default function EditorCanvasKonva({
         layer.add(node);
         layer.draw();
         (transformerRef.current)?.nodes([node]);
-        onChange(stage.toJSON());
+        onChange(serializeStagePruned(stage));
       });
     }
 
@@ -338,7 +340,7 @@ export default function EditorCanvasKonva({
 
       layer.add(text); layer.draw();
       (transformerRef.current)?.nodes([text]);
-      onChange(stage.toJSON());
+      onChange(serializeStagePruned(stage));
     }
 
     function deleteSelected() {
@@ -356,7 +358,7 @@ export default function EditorCanvasKonva({
       deletable.forEach((n) => n.destroy());
       tr.nodes([]);
       stage.draw();
-      onChange(stage.toJSON());
+      onChange(serializeStagePruned(stage));
     }
 
     window.addEventListener(EditorEvent.ADD_RECT, addRect as EventListener);
