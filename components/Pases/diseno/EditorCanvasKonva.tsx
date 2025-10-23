@@ -282,28 +282,36 @@ export default function EditorCanvasKonva({
 
 
     function addImage(ev: Event) {
-      const stage = stageRef.current; if (!stage) return;
-      const layer = findOrCreateEditableLayer(stage);
-      const detailUnknown = (ev as CustomEvent<unknown>).detail;
-      let src: string | null = null;
-      if (detailUnknown && typeof detailUnknown === 'object') {
-        const rec = detailUnknown as Record<string, unknown>;
-        if (typeof rec.src === 'string') src = rec.src;
-      }
-      if (!src) return;
+    const stage = stageRef.current; if (!stage) return;
+    const layer = findOrCreateEditableLayer(stage);
+    const detailUnknown = (ev as CustomEvent<unknown>).detail;
 
-      Konva.Image.fromURL(src, (node) => {
-        node.setAttrs({
-          x: 80, y: 80, width: 160, height: 120,
-          draggable: true,
-          imageSrc: src,
-        });
-        layer.add(node);
-        layer.draw();
-        (transformerRef.current)?.nodes([node]);
-        onChange(serializeStagePruned(stage));
-      });
+    let src: string | null = null;
+    let recursoId: string | undefined;
+
+    if (detailUnknown && typeof detailUnknown === 'object') {
+      const rec = detailUnknown as Record<string, unknown>;
+      // aceptar ambas keys
+      if (typeof rec.imageSrc === 'string') src = rec.imageSrc;
+      else if (typeof rec.src === 'string') src = rec.src;
+      if (typeof rec.recursoId === 'string') recursoId = rec.recursoId;
     }
+    if (!src) return;
+
+    Konva.Image.fromURL(src, (node) => {
+      node.setAttrs({
+        x: 80, y: 80, width: 160, height: 120,
+        draggable: true,
+        imageSrc: src,            // para re-hidratar
+        dataRecursoId: recursoId, // para sync
+      });
+      layer.add(node);
+      layer.draw();
+      (transformerRef.current)?.nodes([node]);
+      onChange(serializeStagePruned(stage));
+    });
+  }
+
 
     function addVariable(ev: Event) {
       const stage = stageRef.current; if (!stage) return;

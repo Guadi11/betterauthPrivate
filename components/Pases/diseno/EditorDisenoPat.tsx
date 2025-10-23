@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { DisenoPatRow as DisenoPat } from '@/lib/pat/disenos/diseno-pat-types';
 import { guardarDisenoPat } from '@/lib/database/diseno-pat-actions';
-import { subirRecursoDiseno } from '@/lib/database/diseno-recursos-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form';
@@ -19,6 +18,11 @@ import GridControls from './editor/GridControls';
 import VariablesPanel from './editor/VariablesPanel';
 import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
 import type { Vars } from '@/lib/pat/disenos/editor/vars';
+import RecursosSheet from '@/components/Recursos/recursos-sheet';
+import {
+  vincularRecursoADisenoAction,
+  syncRecursosDeDisenoAction,
+} from '@/lib/database/recurso-actions';
 
 const DisenoSchema = z.object({
   id: z.string().min(1),
@@ -39,6 +43,20 @@ function useDebouncedEffect(effect: () => void, deps: React.DependencyList, dela
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
+}
+
+// Helper: extraer recursoIds del JSON Konva (busca attrs.dataRecursoId)
+function collectRecursoIdsFromKonvaJson(stageJson: unknown): string[] {
+  const ids = new Set<string>();
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== 'object') return;
+    const n = node as { attrs?: Record<string, unknown>; children?: unknown[] };
+    const maybeId = n.attrs?.['dataRecursoId'];
+    if (typeof maybeId === 'string' && maybeId.length > 0) ids.add(maybeId);
+    if (Array.isArray(n.children)) n.children.forEach(walk);
+  };
+  walk(stageJson);
+  return Array.from(ids);
 }
 
 export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
@@ -100,6 +118,15 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
         estado: values.estado,
         lienzo_json: values.lienzo_json,
       });
+
+      // SYNC recurso_en_diseno con lo que hay en lienzo_json
+      const jsonActual =
+        typeof values.lienzo_json === 'string'
+          ? (() => { try { return JSON.parse(values.lienzo_json) as unknown; } catch { return {}; } })()
+          : (values.lienzo_json as unknown);
+      const recursoIds = collectRecursoIdsFromKonvaJson(jsonActual);
+      await syncRecursosDeDisenoAction(values.id, recursoIds);
+      
       setLastSavedAt(new Date().toLocaleTimeString());
     } catch (e) {
       console.error(e);
@@ -121,17 +148,20 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
     toast.success('Diseño guardado');
   };
 
+  // === Integración con Sheet de Recursos ===
+  const [recursosOpen, setRecursosOpen] = useState<boolean>(false);
+
   // Toolbar: subir imagen → inserta en canvas via evento
   const dispatch = (name: (typeof EditorEvent)[keyof typeof EditorEvent], detail?: unknown) =>
     window.dispatchEvent(new CustomEvent(name, { detail }));
 
-  const onUploadImage = async (file: File) => {
-    const fd = new FormData();
-    fd.set('diseno_id', diseno.id);
-    fd.set('file', file);
-    const res = await subirRecursoDiseno(fd);
-    dispatch(EditorEvent.ADD_IMAGE, { src: res.url });
-  };
+    // Cuando el usuario hace “Insertar” en la Sheet:
+    const handleInsertRecurso = async ({ url, recursoId }: { url: string; recursoId: string }) => {
+      await vincularRecursoADisenoAction(diseno.id, recursoId);
+      dispatch(EditorEvent.ADD_IMAGE, { imageSrc: url, src: url, recursoId });
+      setRecursosOpen(false);
+    };
+
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-6">
@@ -158,7 +188,7 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
               )} />
             </div>
 
-            <CanvasToolbar onPickImage={onUploadImage} />
+            <CanvasToolbar onOpenRecursos={() => setRecursosOpen(true)} />
             <GridControls
               stepMm={gridStepMm}
               snapEnabled={snapEnabled}
@@ -194,6 +224,15 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
           onChange={onCanvasChange}
         />
       </div>
+
+      {/* Sheet de Recursos (global) */}
+      <RecursosSheet
+        disenoId={diseno.id}
+        onInsert={handleInsertRecurso}
+        open={recursosOpen}
+        onOpenChange={setRecursosOpen}
+        hideTrigger
+      />
     </div>
   );
 }
