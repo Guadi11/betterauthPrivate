@@ -160,3 +160,99 @@ SELECT
     s.telefono
 FROM ingreso_por_dia i
 JOIN solicitante s ON i.identificador_solicitante = s.identificador;
+
+CREATE TABLE pases_acceso_transitorio (
+    id SERIAL PRIMARY KEY,
+    documento_registro VARCHAR(50) NOT NULL,
+    identificador_solicitante VARCHAR(8) NOT NULL,
+    nro_interno VARCHAR(5) NOT NULL 
+        CHECK (length(nro_interno) >= 4 AND length(nro_interno) <= 5 AND nro_interno ~ '^\d+$'),  -- Asegura que solo haya dígitos
+    fecha_extension DATE NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    tipo_zona VARCHAR(2) NOT NULL CHECK (tipo_zona IN ('HN', 'ZC', 'ZR', 'PS', 'OT')),
+    acceso_pat VARCHAR(100) NOT NULL,
+    causa_motivo_pat TEXT NOT NULL,
+    codigo_de_seguridad VARCHAR(100) NOT NULL,
+    CONSTRAINT fk_documento_registro FOREIGN KEY (documento_registro) REFERENCES registro(documento),
+    CONSTRAINT fk_identificador_solicitante FOREIGN KEY (identificador_solicitante) REFERENCES solicitante(identificador)
+);
+
+-- Crear índice en documento_registro para mejorar la consulta por documento
+CREATE INDEX idx_pase_acceso_documento ON pases_acceso_transitorio(documento_registro);
+-- Índice para acelerar las consultas por identificador_solicitante
+CREATE INDEX idx_pase_acceso_solicitante ON pases_acceso_transitorio(identificador_solicitante);
+
+-- =========================================================
+-- A) Tabla: diseno_pat
+-- =========================================================
+CREATE TABLE IF NOT EXISTS diseno_pat (
+  id                  BIGSERIAL PRIMARY KEY,
+  nombre              TEXT NOT NULL UNIQUE,
+  ancho_mm            NUMERIC(6,2) NOT NULL CHECK (ancho_mm > 0),
+  alto_mm             NUMERIC(6,2) NOT NULL CHECK (alto_mm > 0),
+  dpi_previsualizacion INTEGER NOT NULL DEFAULT 300 CHECK (dpi_previsualizacion > 0),
+  lienzo_json         JSONB NOT NULL,
+  estado              TEXT NOT NULL DEFAULT 'borrador'
+                      CHECK (estado IN ('borrador','publicado','archivado')),
+  creado_por          TEXT NOT NULL,
+  actualizado_por     TEXT,
+  creado_en           TIMESTAMPTZ NOT NULL DEFAULT now(),
+  actualizado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Listados rápidos por estado / fechas
+CREATE INDEX IF NOT EXISTS ix_diseno_pat_estado ON diseno_pat(estado);
+CREATE INDEX IF NOT EXISTS ix_diseno_pat_creado_en ON diseno_pat(creado_en);
+CREATE INDEX IF NOT EXISTS ix_diseno_pat_actualizado_en ON diseno_pat(actualizado_en);
+
+-- Opcional: si querés validar forma básica del JSON en SQL, podés agregar constraints con jsonschema via trigger (no incluido aquí).
+
+-- Trigger opcional para actualizado_en
+CREATE OR REPLACE FUNCTION set_actualizado_en_diseno_pat()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.actualizado_en := now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_set_actualizado_en_diseno_pat ON diseno_pat;
+CREATE TRIGGER trg_set_actualizado_en_diseno_pat
+BEFORE UPDATE ON diseno_pat
+FOR EACH ROW EXECUTE FUNCTION set_actualizado_en_diseno_pat();
+
+-- =========================================================
+-- B) Tabla: recurso_diseno_pat (assets/sellos por diseño)
+-- =========================================================
+CREATE TABLE IF NOT EXISTS recurso_diseno_pat (
+  id          BIGSERIAL PRIMARY KEY,
+  diseno_id   BIGINT NOT NULL REFERENCES diseno_pat(id) ON DELETE CASCADE,
+  nombre      TEXT NOT NULL,
+  mime_type   TEXT NOT NULL,
+  datos       BYTEA NOT NULL,  -- almacenado offline
+  creado_en   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ix_recurso_diseno_pat_diseno_id ON recurso_diseno_pat(diseno_id);
+-- Si querés evitar duplicados binarios: agregar un hash opcional
+-- ALTER TABLE recurso_diseno_pat ADD COLUMN hash_sha256 TEXT;
+-- CREATE UNIQUE INDEX IF NOT EXISTS ux_recurso_hash_por_diseno ON recurso_diseno_pat(diseno_id, hash_sha256);
+
+-- =========================================================
+-- C) Tabla: log_impresion_pat (auditoría)
+-- =========================================================
+CREATE TABLE IF NOT EXISTS log_impresion_pat (
+  id                  BIGSERIAL PRIMARY KEY,
+  pat_id              BIGINT NOT NULL REFERENCES pases_acceso_transitorio(id),
+  diseno_id           BIGINT NOT NULL REFERENCES diseno_pat(id),
+  impreso_por         TEXT NOT NULL,
+  impreso_en          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  copias              INTEGER NOT NULL DEFAULT 1 CHECK (copias > 0),
+  variables_resueltas JSONB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_log_impresion_pat_pat_id ON log_impresion_pat(pat_id);
+CREATE INDEX IF NOT EXISTS ix_log_impresion_pat_diseno_id ON log_impresion_pat(diseno_id);
+CREATE INDEX IF NOT EXISTS ix_log_impresion_pat_impreso_en ON log_impresion_pat(impreso_en);
+-- Para consultas por campo dentro de variables_resueltas:
+CREATE INDEX IF NOT EXISTS ix_log_impresion_pat_vars_gin ON log_impresion_pat USING GIN (variables_resueltas);
