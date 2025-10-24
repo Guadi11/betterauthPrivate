@@ -41,6 +41,25 @@ function findOrCreateEditableLayer(stage: Konva.Stage): Konva.Layer {
   return layer;
 }
 
+function fitKeepRatio(
+  srcW: number,
+  srcH: number,
+  maxW: number,
+  maxH: number,
+  minW = 24,
+  minH = 24
+) {
+  const r = srcW / srcH;
+  let w = Math.min(srcW, maxW);
+  let h = w / r;
+  if (h > maxH) {
+    h = Math.min(srcH, maxH);
+    w = h * r;
+  }
+  w = Math.max(minW, Math.round(w));
+  h = Math.max(minH, Math.round(h));
+  return { w, h, r };
+}
 
 function hydrateImages(stage: Konva.Stage) {
   const images = stage.find('Image');
@@ -282,35 +301,57 @@ export default function EditorCanvasKonva({
 
 
     function addImage(ev: Event) {
-    const stage = stageRef.current; if (!stage) return;
-    const layer = findOrCreateEditableLayer(stage);
-    const detailUnknown = (ev as CustomEvent<unknown>).detail;
+      const stage = stageRef.current; if (!stage) return;
+      const layer = findOrCreateEditableLayer(stage);
+      const detailUnknown = (ev as CustomEvent<unknown>).detail;
 
-    let src: string | null = null;
-    let recursoId: string | undefined;
+      let src: string | null = null;
+      let recursoId: string | undefined;
 
-    if (detailUnknown && typeof detailUnknown === 'object') {
-      const rec = detailUnknown as Record<string, unknown>;
-      // aceptar ambas keys
-      if (typeof rec.imageSrc === 'string') src = rec.imageSrc;
-      else if (typeof rec.src === 'string') src = rec.src;
-      if (typeof rec.recursoId === 'string') recursoId = rec.recursoId;
-    }
-    if (!src) return;
+      if (detailUnknown && typeof detailUnknown === 'object') {
+        const rec = detailUnknown as Record<string, unknown>;
+        if (typeof rec.imageSrc === 'string') src = rec.imageSrc;
+        else if (typeof rec.src === 'string') src = rec.src;
+        if (typeof rec.recursoId === 'string') recursoId = rec.recursoId;
+      }
+      if (!src) return;
 
-    Konva.Image.fromURL(src, (node) => {
-      node.setAttrs({
-        x: 80, y: 80, width: 160, height: 120,
-        draggable: true,
-        imageSrc: src,            // para re-hidratar
-        dataRecursoId: recursoId, // para sync
+      Konva.Image.fromURL(src, (node) => {
+        // Dimensiones naturales + encaje a 60% del stage manteniendo ratio
+        const imgEl = node.image() as HTMLImageElement | null;
+        const natW = imgEl?.naturalWidth ?? 160;
+        const natH = imgEl?.naturalHeight ?? 120;
+
+        const { w, h, r } = fitKeepRatio(
+          natW,
+          natH,
+          stage.width() * 0.6,
+          stage.height() * 0.6
+        );
+
+        node.setAttrs({
+          x: 80,
+          y: 80,
+          width: w,
+          height: h,
+          draggable: true,
+          imageSrc: src,            // re-hidratación
+          dataRecursoId: recursoId, // sync
+          __aspect: r,              // guardar ratio para snap/resize
+        });
+
+        layer.add(node);
+        layer.draw();
+
+        // Selecciono y activo mantener ratio para imágenes
+        if (transformerRef.current) {
+          transformerRef.current.nodes([node]);
+          transformerRef.current.setAttrs({ keepRatio: true });
+        }
+
+        onChange(serializeStagePruned(stage));
       });
-      layer.add(node);
-      layer.draw();
-      (transformerRef.current)?.nodes([node]);
-      onChange(serializeStagePruned(stage));
-    });
-  }
+    }
 
 
     function addVariable(ev: Event) {
