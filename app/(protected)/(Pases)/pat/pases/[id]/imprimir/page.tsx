@@ -41,15 +41,25 @@ export default async function PaginaImprimirPAT({
     <div className="p-4">
       {/* CSS de impresión: tamaño exacto del diseño y sin márgenes */}
       <style
-        dangerouslySetInnerHTML={{
-          __html: `
-@page { size: ${dis.ancho_mm}mm ${dis.alto_mm}mm; margin: 0; }
-@media print {
-  html, body { margin: 0; padding: 0; }
-}
-          `.trim(),
-        }}
-      />
+            dangerouslySetInnerHTML={{
+                __html: `
+            @page { size: ${dis.ancho_mm}mm ${dis.alto_mm}mm; margin: 0; }
+
+            @media print {
+            html, body { margin: 0; padding: 0; }
+            body * { visibility: hidden !important; }          /* Oculta TODO */
+            #print-root, #print-root * {                       /* Muestra SOLO el pase */
+                visibility: visible !important;
+            }
+            #print-root {
+                position: fixed;
+                inset: 0;
+                margin: 0;
+            }
+            }
+                `.trim(),
+            }}
+        />
       <PrintPatClient payload={payload} />
     </div>
   );

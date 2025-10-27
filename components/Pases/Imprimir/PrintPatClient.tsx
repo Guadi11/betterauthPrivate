@@ -36,91 +36,85 @@ export default function PrintPatClient({ payload }: { payload: Payload }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
 
-  // Crea el stage, aplica variables, precarga imágenes y exporta
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  const container = containerRef.current;
+  if (!container) return;
 
-    // Crear Stage desde el JSON
-    const jsonObj: unknown = diseno.lienzo_json;
-    const stage = Konva.Node.create(
-      jsonObj as Record<string, unknown>,
-      container
-    ) as Konva.Stage;
+  // Unificar instancia de Konva en toda la app
+  const K: typeof Konva = (typeof window !== "undefined" && (window as unknown as { Konva?: typeof Konva }).Konva)
+    ? (window as unknown as { Konva: typeof Konva }).Konva!
+    : Konva;
+  if (typeof window !== "undefined") {
+    (window as unknown as { Konva?: typeof Konva }).Konva = K;
+  }
 
-    // Asegurar tamaño (por si acaso)
-    const w = stage.width();
-    const h = stage.height();
+  let destroyed = false;
 
-    // 1) Inyectar variables en Text nodes
-    const textNodes = stage.find("Text");
-    textNodes.forEach((node) => {
-      const kind: unknown = node.getAttr("__kind");
-      if (kind !== "variable") return;
-      const varKeyUnknown: unknown = node.getAttr("varKey");
-      const varKey = typeof varKeyUnknown === "string" ? varKeyUnknown : "";
-      const value = (vars as Record<string, string>)[varKey] ?? "";
-      node.setAttr("text", value);
+  // Crear Stage desde el JSON
+  const jsonObj: unknown = diseno.lienzo_json;
+  const stage = (K as unknown as { Node: typeof Konva.Node })
+    .Node.create(jsonObj as Record<string, unknown>, container) as Konva.Stage;
+
+  // Inyectar variables
+  stage.find("Text").forEach((node) => {
+    if (node.getAttr("__kind") !== "variable") return;
+    const key = typeof node.getAttr("varKey") === "string" ? (node.getAttr("varKey") as string) : "";
+    node.setAttr("text", (vars as Record<string, string>)[key] ?? "");
+  });
+
+  // Precargar imágenes
+  const imageNodes = stage.find("Image");
+  const urls = Array.from(
+    new Set(
+      imageNodes
+        .map(n => (typeof n.getAttr("imageSrc") === "string" ? (n.getAttr("imageSrc") as string) : null))
+        .filter(Boolean) as string[]
+    )
+  );
+
+  function loadOne(url: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = (e) => reject(e);
+      img.src = url;
     });
+  }
 
-    // 2) Precargar imágenes
-    const imageNodes = stage.find("Image");
-    const urls = imageNodes
-      .map((n) => {
-        const srcUnknown: unknown = n.getAttr("imageSrc");
-        return typeof srcUnknown === "string" ? srcUnknown : null;
-      })
-      .filter(Boolean) as string[];
-
-    const uniqueUrls = Array.from(new Set(urls));
-
-    function loadOne(url: string): Promise<HTMLImageElement> {
-      return new Promise((resolve, reject) => {
-        const img = new window.Image();
-        img.crossOrigin = "anonymous"; // mismo origen, por las dudas
-        img.onload = () => resolve(img);
-        img.onerror = (e) => reject(e);
-        img.src = url;
-      });
-    }
-
-    (async () => {
-      try {
-        const loaded = await Promise.all(uniqueUrls.map(loadOne));
-        const map = new Map<string, HTMLImageElement>();
-        uniqueUrls.forEach((u, i) => map.set(u, loaded[i]));
-
+  (async () => {
+    try {
+      if (urls.length) {
+        const loaded = await Promise.all(urls.map(loadOne));
+        const map = new Map(urls.map((u, i) => [u, loaded[i]] as const));
         imageNodes.forEach((node) => {
-          const srcUnknown: unknown = node.getAttr("imageSrc");
-          const src = typeof srcUnknown === "string" ? srcUnknown : null;
-          if (src && map.has(src)) {
-            node.setAttr("image", map.get(src) as HTMLImageElement);
-          }
+          const src = typeof node.getAttr("imageSrc") === "string" ? (node.getAttr("imageSrc") as string) : null;
+          if (src && map.has(src)) node.setAttr("image", map.get(src) as HTMLImageElement);
         });
-
-        stage.draw();
-
-        // 3) Exportar a PNG con buena resolución
-        const dpiImpresion = 300;
-        const pixelRatio = Math.max(1, dpiImpresion / (diseno.dpi_previsualizacion || 300));
-
-        const url = stage.toDataURL({ pixelRatio });
-        setDataUrl(url);
-      } catch {
-        // Si falla la carga de alguna imagen, exportamos igual
-        const url = stage.toDataURL({ pixelRatio: 1 });
-        setDataUrl(url);
       }
-    })();
 
-    return () => {
-      // limpiar
-      try {
-        stage.destroy();
-        if (container) container.innerHTML = "";
-      } catch {}
-    };
-  }, [diseno, vars]);
+      if (destroyed) return;
+      stage.draw();
+
+      const dpiImpresion = 300;
+      const pixelRatio = Math.max(1, dpiImpresion / (diseno.dpi_previsualizacion || 300));
+
+      const url = stage.toDataURL({ pixelRatio });
+      if (!destroyed) setDataUrl(url);
+    } catch {
+      if (!destroyed) setDataUrl(stage.toDataURL({ pixelRatio: 1 }));
+    }
+  })();
+
+  return () => {
+    destroyed = true;
+    try {
+      stage.destroy();
+      if (container) container.innerHTML = "";
+    } catch {}
+  };
+}, [diseno, vars]);
+
 
   // Lanza impresión automática cuando la imagen esté lista
   useEffect(() => {
@@ -132,27 +126,20 @@ export default function PrintPatClient({ payload }: { payload: Payload }) {
   }, [dataUrl]);
 
   return (
-    <div className="w-full">
-      {/* contenedor oculto para Konva */}
-      <div ref={containerRef} className="hidden" style={{ width: 0, height: 0 }} />
-
-      {/* Resultado como imagen a tamaño físico */}
-      {dataUrl ? (
-        // Next/Image para layout, pero respetamos mm con style
-        <ImageNext
-          src={dataUrl}
-          alt={`PAT ${pat.id}`}
-          width={1} height={1} // ignorado por style
-          style={{
-            width: `${diseno.ancho_mm}mm`,
-            height: `${diseno.alto_mm}mm`,
-            display: "block",
-          }}
-          priority
-        />
-      ) : (
-        <div className="text-sm text-muted-foreground">Generando imagen para imprimir…</div>
-      )}
-    </div>
-  );
+  <div id="print-root" className="w-full">
+    <div ref={containerRef} className="hidden" style={{ width: 0, height: 0 }} />
+    {dataUrl ? (
+      <ImageNext
+        src={dataUrl}
+        alt={`PAT ${pat.id}`}
+        width={1}
+        height={1}
+        style={{ width: `${diseno.ancho_mm}mm`, height: `${diseno.alto_mm}mm`, display: "block" }}
+        priority
+      />
+    ) : (
+      <div className="text-sm text-muted-foreground">Generando imagen para imprimir…</div>
+    )}
+  </div>
+);
 }
