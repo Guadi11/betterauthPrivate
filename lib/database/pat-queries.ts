@@ -107,6 +107,7 @@ export interface PatConRegistro {
   // registro
   registro_apellido: string;
   registro_nombre: string;
+  registro_tipo_documento:string;
   registro_documento: string;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PaseConSolicitante } from "@/lib/database/pat-queries";
 import {
   Table,
@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Printer, MoreHorizontal } from "lucide-react";
+import SeleccionarDisenoDialog from "@/components/Pases/Imprimir/SeleccionarDisenoDialog";
+
 
 type Props = {
   data: PaseConSolicitante[];
@@ -131,30 +133,34 @@ export default function TablaPatsDelRegistro({ data }: Props) {
               </TableCell>
 
               <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Abrir acciones">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {/* Placeholder de imprimir */}
-                    <DropdownMenuItem
-                      onClick={() => {
-                        console.log("Imprimir PAT id:", p.id);
-                        alert(`Imprimir PAT #${p.id} (placeholder)`);
-                      }}
-                    >
-                      <Printer className="mr-2 h-4 w-4" />
-                      Imprimir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <RowPrintAction patId={p.id} />
               </TableCell>
             </TableRow>
           );
         })}
       </TableBody>
     </Table>
+  );
+}
+
+function RowPrintAction({ patId }: { patId: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Abrir acciones">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
+            <Printer className="mr-2 h-4 w-4" />
+            Imprimir
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <SeleccionarDisenoDialog patId={patId} open={open} onOpenChange={setOpen} />
+    </>
   );
 }
