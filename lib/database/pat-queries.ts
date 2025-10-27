@@ -123,9 +123,10 @@ export async function obtenerPatConRegistroPorId(id_pat: number): Promise<PatCon
       p.codigo_de_seguridad,
       r.apellido AS registro_apellido,
       r.nombre   AS registro_nombre,
+      r.tipo_documento AS registro_tipo_documento,
       r.documento AS registro_documento
     FROM pases_acceso_transitorio p
-    JOIN registros r ON r.documento = p.documento_registro
+    JOIN registro r ON r.documento = p.documento_registro
     WHERE p.id = $1
   `;
   const { rows } = await query(sql, [id_pat]);
