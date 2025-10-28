@@ -4,6 +4,7 @@ import { IngresoConSolicitanteSchema } from '@/app/(protected)/(registros)/regis
 import { darSalida, insertarIngreso } from '@/lib/database/ingreso-queries';
 import { z } from 'zod';
 import { insertarSolicitante, obtenerSolicitanteConId } from '@/lib/database/solicitante-queries';
+import { DatabaseError } from 'pg';
 
 export async function realizarSalida(id_ingreso: number) {
   try {
@@ -35,14 +36,15 @@ export async function darIngreso(documento: string, data: z.infer<typeof Ingreso
     });
 
     return { ok: true as const };
-  } catch (err: any) {
+  } catch (err: unknown) {
     // PostgreSQL
     // code: '23505' = unique_violation
     // code: '23514' = check_violation
     // code: '23503' = foreign_key_violation
     // code: '23502' = not_null_violation
-    const pgCode = err?.code;
-    const constraint = err?.constraint;
+    const e = err as DatabaseError;
+    const pgCode = e.code;
+    const constraint = e.constraint;
 
     // Mensajes amigables por caso
     if (pgCode === '23505' && constraint === 'ux_tarjeta_abierta') {
@@ -87,7 +89,7 @@ export async function darIngreso(documento: string, data: z.infer<typeof Ingreso
       type: 'desconocido',
       field: 'root',
       message: 'Ocurrió un error al registrar el ingreso.',
-      meta: { code: pgCode, constraint, detail: err?.detail ?? null },
+      meta: { code: pgCode, constraint, detail: e.detail ?? null },
     };
   }
 }
