@@ -1,4 +1,4 @@
-// app/api/pat/disenos/route.ts
+// app/api/disenos/route.ts
 import { NextResponse } from "next/server";
 import { listarDisenos } from "@/lib/database/diseno-pat-queries";
 
