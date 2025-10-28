@@ -144,23 +144,36 @@ export default function TablaPatsDelRegistro({ data }: Props) {
 }
 
 function RowPrintAction({ patId }: { patId: number }) {
-  const [open, setOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Abrir acciones">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true); }}>
+          <DropdownMenuItem
+            onSelect={() => {
+              // que el menú se cierre y recién ahí abrir el diálogo
+              setMenuOpen(false);
+              setTimeout(() => setDialogOpen(true), 0);
+            }}
+          >
             <Printer className="mr-2 h-4 w-4" />
             Imprimir
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <SeleccionarDisenoDialog patId={patId} open={open} onOpenChange={setOpen} />
+
+      <SeleccionarDisenoDialog
+        patId={patId}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </>
   );
 }

@@ -13,7 +13,7 @@ import TablaPatsDelRegistro from "@/components/Pases/tabla-pases-del-registro";
 export default async function PaginaRegistro({
   params,
 }: {
-  params: Promise<{ documento: string }>; 
+  params:  {documento: string }; 
 }) {
   const { documento } = await params;
   const registro: Registro | null = await obtenerRegistroPorDocumento(documento);
