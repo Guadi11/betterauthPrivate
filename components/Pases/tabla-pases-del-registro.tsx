@@ -106,7 +106,14 @@ export default function TablaPatsDelRegistro({ data }: Props) {
               <TableCell>{formatDate(p.fecha_vencimiento)}</TableCell>
 
               <TableCell>
-                <Badge variant={vigente ? "default" : "secondary"}>
+                <Badge
+                  className={
+                    (vigente
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-red-600 hover:bg-red-700") +
+                    " text-white border-transparent"
+                  }
+                >
                   {vigente ? "Vigente" : "Vencido"}
                 </Badge>
               </TableCell>
