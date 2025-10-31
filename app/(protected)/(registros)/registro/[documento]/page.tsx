@@ -27,6 +27,7 @@ export default async function PaginaRegistro({
   let pases: PaseConSolicitante[] = [];
   try {
     pases = await obtenerPATsPorDocumento(documento);
+    console.log(pases);
   } catch (e) {
     console.error("Error al obtener PATs:", e);
   }
@@ -46,7 +47,7 @@ export default async function PaginaRegistro({
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             <DarIngresoButton documento={documento} />
             <ConfeccionarPATBoton documento={documento} />
-            <PatVencimiento />
+            <PatVencimiento pases={pases} />
           </div>
         </div>
       </div>
