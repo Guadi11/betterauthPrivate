@@ -27,7 +27,6 @@ export default async function PaginaRegistro({
   let pases: PaseConSolicitante[] = [];
   try {
     pases = await obtenerPATsPorDocumento(documento);
-    console.log(pases);
   } catch (e) {
     console.error("Error al obtener PATs:", e);
   }
