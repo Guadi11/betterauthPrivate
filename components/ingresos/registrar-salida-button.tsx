@@ -3,6 +3,7 @@
 import { realizarSalida } from "@/lib/database/ingreso-actions";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function BotonDarSalida({ id_ingreso }: { id_ingreso: number }) {
   const [isPending, startTransition] = useTransition();
@@ -12,9 +13,10 @@ export function BotonDarSalida({ id_ingreso }: { id_ingreso: number }) {
     startTransition(async () => {
       const res = await realizarSalida(id_ingreso);
       if (res.success) {
-        console.log("¡Salida registrada con éxito!");
+        toast.success("Salida registrada con exito");
         router.refresh(); // refresca los datos del servidor
       } else {
+        toast.error("Error al registrar la salida: " + res.error)
         console.log(res.error || "Error al registrar la salida");
       }
     });
