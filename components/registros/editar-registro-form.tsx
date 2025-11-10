@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { RegistroSchema } from "./crear-registro-form"
+import { RegistroSchema } from "@/lib/zod/registro-schemas"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { actualizarRegistro } from "@/lib/database/registro-actions"

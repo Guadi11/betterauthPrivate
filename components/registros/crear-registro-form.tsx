@@ -1,172 +1,113 @@
-"use client"
+"use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { crearRegistro } from "@/lib/database/registro-actions";
+import { UserRoundCheck } from "lucide-react";
+import { toast } from "sonner";
+import { RegistroSchema, RegistroFormData } from "@/lib/zod/registro-schemas"; // <- nuevo import
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { useRouter } from "next/navigation"
+export default function RegistroForm() {
+  const router = useRouter();
 
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "@/components/ui/select"
-import { crearRegistro } from "@/lib/database/registro-actions"
-import { UserRoundCheck } from "lucide-react"
+  const form = useForm<RegistroFormData>({
+    resolver: zodResolver(RegistroSchema),
+    defaultValues: {
+      documento: "",
+      tipo_documento: "DNI",
+      nombre: "",
+      apellido: "",
+      fecha_nacimiento: undefined,
+      nacionalidad: "",
+      domicilio_real: "",
+      domicilio_eventual: "",
+      observacion_cc: false,
+    },
+  });
 
+  const tipoDoc = form.watch("tipo_documento");
 
-export const RegistroSchema = z.object({
-    documento: z.string()
-      .min(6, "El documento debe tener al menos 6 caracteres")
-      .max(20, "El documento no puede superar 20 caracteres")
-      .refine((value) => {
-        const isValidDNI = value.length >= 7 && value.length <= 8 && /^\d+$/.test(value);
-        const isValidPassport = value.length >= 6 && value.length <= 20 && /^[A-Z0-9]+$/.test(value);
-        return isValidDNI || isValidPassport;
-      }, { 
-        message: "El documento debe ser numérico para DNI (7-8 dígitos) o alfanumérico para Pasaporte" 
-      }),
-    
-    tipo_documento: z.enum(['DNI', 'Pasaporte'], {
-      errorMap: () => ({ message: "Tipo de documento debe ser DNI o Pasaporte" })
-    }),
-    
-    nombre: z.string()
-      .min(2, "El nombre debe tener al menos 2 caracteres")
-      .max(100, "El nombre no puede superar 100 caracteres")
-      .trim(),
-    
-    apellido: z.string()
-      .min(2, "El apellido debe tener al menos 2 caracteres")
-      .max(100, "El apellido no puede superar 100 caracteres")
-      .trim(),
-    
-    fecha_nacimiento: z.date()
-      .max(new Date(), { message: "La fecha de nacimiento no puede ser futura" })
-      .optional(),
-    
-    nacionalidad: z.string()
-      .max(100, "La nacionalidad no puede superar 100 caracteres")
-      .optional(),
-    
-    domicilio_real: z.string()
-      .max(255, "El domicilio real no puede superar 255 caracteres")
-      .optional(),
-    
-    domicilio_eventual: z.string()
-      .max(255, "El domicilio eventual no puede superar 255 caracteres")
-      .optional(),
-    
-    observacion_cc: z.boolean().default(false)
-  }).strict();
+  async function onSubmit(values: RegistroFormData) {
+    const result = await crearRegistro(values);
 
-export default function RegistroForm(){
-    const router = useRouter();
-    //1. Definir el formulario
-    const form = useForm<z.infer<typeof RegistroSchema>>({
-        resolver: zodResolver(RegistroSchema),
-        defaultValues:{
-            documento: "",
-            tipo_documento: "DNI",
-            nombre: "",
-            apellido: "",
-            fecha_nacimiento: undefined,
-            nacionalidad: "",
-            domicilio_real: "",
-            domicilio_eventual: "",
-            observacion_cc: false
-        }
-    })
-
-    //Observa el formulario e imprime los valores a medida que cambian
-    //console.log("Form values:", form.watch());
-
-    //2. Definir el handler 
-    async function onSubmit(values: z.infer<typeof RegistroSchema>) {
-      try {
-        console.log("Enviando datos...", values);
-        
-        // Llamar a la server action
-        const result = await crearRegistro(values);
-        
-        if (result.success) {
-          router.push(`/registro/${values.documento}`);
-        } else {
-          if (result.error?.includes("documento")) {
-            form.setError("documento", { message: result.error });
-          } else {
-            // Podés agregar manejo para otros campos o errores generales
-            console.error("Otro error:", result.error);
-          }
-        }
-      } catch (error) {
-        console.error("Error al enviar el formulario:", error);
-      }
+    if (result.success) {
+      toast.success("Registro creado correctamente");
+      router.push(`/registro/${values.documento}`);
+      return;
     }
-    
-    return(
-        <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-            control={form.control}
-            name="documento"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>
-                  Documento
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                    <Input placeholder="81544970" maxLength={20} {...field} />
-                </FormControl>
-                <FormDescription>
-                    Ingrese el DNI o Pasaporte
-                </FormDescription>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
 
-            <FormField
-            control={form.control}
-            name="tipo_documento"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>
-                  Tipo de Documento
-                  <span className="text-red-500">*</span>
-                </FormLabel>
-                <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                >
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Seleccione tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="DNI">DNI</SelectItem>
-                        <SelectItem value="Pasaporte">Pasaporte</SelectItem>
-                    </SelectContent>
-                </Select>
-                <FormDescription>
-                    Seleccione el tipo de documento
-                </FormDescription>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
+    // Setear errores de campo si existen
+    if (result.fieldErrors) {
+      (Object.entries(result.fieldErrors) as Array<[keyof RegistroFormData, string | undefined]>)
+        .forEach(([field, message]) => {
+          if (message) form.setError(field, { message });
+        });
+    }
+
+    // Mostrar toast para errores generales
+    if (result.message) {
+      toast.error("No se pudo crear el registro", { description: result.message });
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField
+          control={form.control}
+          name="documento"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Documento <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={tipoDoc === "DNI" ? "81544970" : "AA123456"}
+                  inputMode={tipoDoc === "DNI" ? "numeric" : "text"}
+                  maxLength={tipoDoc === "DNI" ? 8 : 20}
+                  value={field.value ?? ""}
+                  onChange={(e) => {
+                    let v = e.target.value;
+                    v = tipoDoc === "DNI"
+                      ? v.replace(/\D/g, "") // solo dígitos
+                      : v.replace(/[^a-zA-Z0-9]/g, "").toUpperCase(); // alfanum y mayúsculas
+                    field.onChange(v);
+                  }}
+                />
+              </FormControl>
+              <FormDescription>Ingrese el {tipoDoc === "DNI" ? "DNI (7–8 dígitos)" : "Pasaporte (6–20 alfanumérico)"}</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="tipo_documento"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Tipo de Documento <span className="text-red-500">*</span>
+              </FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Seleccione tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DNI">DNI</SelectItem>
+                  <SelectItem value="Pasaporte">Pasaporte</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>Seleccione el tipo de documento</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
             <FormField
             control={form.control}
