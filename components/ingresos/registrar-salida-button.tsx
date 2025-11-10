@@ -1,6 +1,6 @@
 'use client';
 
-import { realizarSalida } from "@/lib/database/ingreso-actions";
+import { realizarSalida, RealizarSalidaResult } from "@/lib/database/ingreso-actions";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -11,13 +11,18 @@ export function BotonDarSalida({ id_ingreso }: { id_ingreso: number }) {
 
   const handleSalida = () => {
     startTransition(async () => {
-      const res = await realizarSalida(id_ingreso);
+      const res: RealizarSalidaResult = await realizarSalida(id_ingreso);
+
       if (res.success) {
-        toast.success("Salida registrada con exito");
-        router.refresh(); // refresca los datos del servidor
+        toast.success("Salida registrada con éxito");
+        router.refresh();
       } else {
-        toast.error("Error al registrar la salida: " + res.error)
-        console.log(res.error || "Error al registrar la salida");
+        // Título + descripción (más legible)
+        toast.error("No se pudo registrar la salida", {
+          description: res.error,
+        });
+        // Metadatos útiles para depurar sin mostrarlos al usuario:
+        if (res.meta) console.warn("PG meta:", res.meta);
       }
     });
   };

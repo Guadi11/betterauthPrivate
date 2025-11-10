@@ -46,13 +46,17 @@ export async function obtenerIngresosPorDocumento(documento: string): Promise<In
   }
 }
 
-export async function darSalida(id_ingreso: number) {
-  const now = new Date();
+export async function darSalida(id_ingreso: number): Promise<Ingreso | null> {
   const result = await query(
-    'UPDATE ingreso_por_dia SET fecha_egreso = $1 WHERE id_ingreso = $2 RETURNING *;',
-    [now, id_ingreso]
+    `UPDATE ingreso_por_dia
+     SET fecha_egreso = NOW()
+     WHERE id_ingreso = $1 AND fecha_egreso IS NULL
+     RETURNING *;`,
+    [id_ingreso]
   );
-  return result.rows[0]; // opcional, para verificar que se actualizó
+
+  // Si no se afectó ninguna fila, ya estaba cerrado o no existe.
+  return (result.rows[0] ?? null) as Ingreso | null;
 }
 
 

@@ -1,18 +1,53 @@
 'use server'
 
 import { IngresoConSolicitanteSchema } from '@/app/(protected)/(registros)/registro/[documento]/dar_ingreso/page';
-import { darSalida, insertarIngreso } from '@/lib/database/ingreso-queries';
+import { darSalida, Ingreso, insertarIngreso } from '@/lib/database/ingreso-queries';
 import { z } from 'zod';
 import { insertarSolicitante, obtenerSolicitanteConId } from '@/lib/database/solicitante-queries';
 import { DatabaseError } from 'pg';
 
-export async function realizarSalida(id_ingreso: number) {
+type SalidaOK = { success: true; data: Ingreso };
+type SalidaErr = {
+  success: false;
+  error: string;
+  meta?: { code?: string; constraint?: string; detail?: string };
+};
+export type RealizarSalidaResult = SalidaOK | SalidaErr;
+
+export async function realizarSalida(id_ingreso: number): Promise<RealizarSalidaResult> {
   try {
     const resultado = await darSalida(id_ingreso);
+    if (!resultado) {
+      // Nada para actualizar (ya tenía egreso o no existe)
+      return {
+        success: false,
+        error: 'El ingreso no existe o ya tiene registrada la salida.',
+      };
+    }
     return { success: true, data: resultado };
-  } catch (error) {
-    console.error("Error al dar salida:", error);
-    return { success: false, error: "No se pudo registrar la salida" };
+  } catch (err: unknown) {
+    const e = err as DatabaseError;
+    const key = `${e.code ?? ''}|${e.constraint ?? ''}`;
+
+    // Mensajes “amigables” por constraint/código
+    const friendlyByKey: Record<string, string> = {
+      // 23514 = check_violation
+      '23514|chk_max_duracion_visita':
+        'La visita excede la duración máxima permitida (24 h). No se puede registrar la salida automática. Use “Cerrar fuera de término”.',
+    };
+
+    const friendly = friendlyByKey[key];
+
+    return {
+      success: false,
+      error: friendly ?? e.message ?? 'No se pudo registrar la salida.',
+      meta: {
+        code: e.code,
+        constraint: e.constraint,
+        // Algunos drivers tipan `detail` como opcional; lo sacamos de forma segura:
+        detail: (e as unknown as { detail?: string }).detail,
+      },
+    };
   }
 }
 
