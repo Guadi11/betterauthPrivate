@@ -40,24 +40,58 @@ CREATE TABLE solicitante (
 -- =========================
 -- Alineamos el largo del documento al máximo real requerido (Pasaporte hasta 20),
 -- así ingresopor_dia.documento puede referenciarlo con el mismo tipo/largo.
-CREATE TABLE registro (
-    documento           VARCHAR(20) PRIMARY KEY,
-    tipo_documento      VARCHAR(20) NOT NULL CHECK (tipo_documento IN ('DNI', 'Pasaporte')),
-    nombre              VARCHAR(100) NOT NULL,
-    apellido            VARCHAR(100) NOT NULL,
-    fecha_nacimiento    DATE,
-    nacionalidad        VARCHAR(100),
-    domicilio_real      VARCHAR(255),
-    domicilio_eventual  VARCHAR(255),
-    observacion_cc      BOOLEAN DEFAULT FALSE,
-    observacion         TEXT,
+-- Table: public.registro
 
-    CONSTRAINT check_documento 
-      CHECK (
-        (tipo_documento = 'DNI'       AND documento ~ '^\d{7,8}$') OR 
-        (tipo_documento = 'Pasaporte' AND length(documento) BETWEEN 6 AND 20)
-      )
-);
+-- DROP TABLE IF EXISTS public.registro;
+
+CREATE TABLE IF NOT EXISTS public.registro
+(
+    documento character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    tipo_documento character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    nombre character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    apellido character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    fecha_nacimiento date,
+    nacionalidad character varying(100) COLLATE pg_catalog."default",
+    domicilio_real character varying(255) COLLATE pg_catalog."default",
+    domicilio_eventual character varying(255) COLLATE pg_catalog."default",
+    observacion_cc boolean DEFAULT false,
+    observacion text COLLATE pg_catalog."default",
+    creado_en timestamp with time zone DEFAULT now(),
+    actualizado_en timestamp with time zone DEFAULT now(),
+    CONSTRAINT registro_pkey PRIMARY KEY (documento),
+    CONSTRAINT check_documento CHECK (tipo_documento::text = 'DNI'::text AND documento::text ~ '^\d{7,8}$'::text OR tipo_documento::text = 'Pasaporte'::text AND documento::text ~ '^[A-Za-z0-9]{6,20}$'::text),
+    CONSTRAINT registro_tipo_documento_check CHECK (tipo_documento::text = ANY (ARRAY['DNI'::character varying, 'Pasaporte'::character varying]::text[]))
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.registro
+    OWNER to postgres;
+-- Index: idx_registro_documento
+
+-- DROP INDEX IF EXISTS public.idx_registro_documento;
+
+CREATE INDEX IF NOT EXISTS idx_registro_documento
+    ON public.registro USING btree
+    (documento COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+-- Trigger: set_actualizado_en
+
+-- DROP TRIGGER IF EXISTS set_actualizado_en ON public.registro;
+
+CREATE OR REPLACE FUNCTION trigger_set_actualizado_en_registro()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.actualizado_en = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_actualizado_en
+BEFORE UPDATE ON public.registro
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_actualizado_en_registro();
 
 -- NOTA: No creamos índice adicional sobre documento porque ya es PK (índice implícito).
 
