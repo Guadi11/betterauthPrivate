@@ -3,7 +3,7 @@ import { z } from "zod";
 export const RegistroSchema = z.object({
   documento: z
     .string()
-    .min(6, "El documento debe tener al menos 6 caracteres")
+    .min(7, "El documento debe tener al menos 7 caracteres")
     .max(20, "El documento no puede superar 20 caracteres")
     .trim()
     // Uppercase siempre: no afecta a DNI y normaliza Pasaporte
