@@ -1,6 +1,6 @@
 'use server'
 
-import { IngresoConSolicitanteSchema } from '@/app/(protected)/(registros)/registro/[documento]/dar_ingreso/page';
+import { IngresoConSolicitanteSchema } from '@/lib/zod/ingreso-schemas';
 import { darSalida, Ingreso, insertarIngreso } from '@/lib/database/ingreso-queries';
 import { z } from 'zod';
 import { insertarSolicitante, obtenerSolicitanteConId } from '@/lib/database/solicitante-queries';
