@@ -1,7 +1,7 @@
 // app/actions/registro-actions.ts
 'use server'
 
-import { Registro, actualizarObservacionRegistroEnDB, actualizarRegistroEnDB, insertarRegistro } from '@/lib/database/registros-queries';
+import { Registro, RegistroInsert, RegistroUpdate, actualizarObservacionRegistroEnDB, actualizarRegistroEnDB, insertarRegistro } from '@/lib/database/registros-queries';
 import { RegistroSchema, RegistroFormData } from '@/lib/zod/registro-schemas'; 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -33,7 +33,7 @@ export async function crearRegistro(raw: unknown): Promise<CrearRegistroResult> 
     // 1) Obtenemos el ID del usuario autenticado
     const userId = await requireUserId();
     console.log(userId);
-    const registro: Registro = {
+    const registro: RegistroInsert = {
       documento: data.documento,
       tipo_documento: data.tipo_documento,
       nombre: data.nombre,
@@ -44,6 +44,7 @@ export async function crearRegistro(raw: unknown): Promise<CrearRegistroResult> 
       domicilio_eventual: data.domicilio_eventual || undefined,
       observacion_cc: data.observacion_cc,
       creado_por: userId,
+      actualizado_por: userId,
     };
 
     const nuevoRegistro = await insertarRegistro(registro);
@@ -91,7 +92,7 @@ export async function crearRegistro(raw: unknown): Promise<CrearRegistroResult> 
 export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, documentoViejo: string) {
   try{
     const userId = await requireUserId();
-    const registro: Registro = {
+    const registro: RegistroUpdate = {
       documento: data.documento,
       tipo_documento: data.tipo_documento,
       nombre: data.nombre,
@@ -131,7 +132,8 @@ export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, d
 
 export async function actualizarObservacionRegistro(documento:string, observacion:string){
   try{
-    await actualizarObservacionRegistroEnDB(documento, observacion);
+    const userId = await requireUserId();
+    await actualizarObservacionRegistroEnDB(documento, observacion, userId);
     return {
       success:true
     };

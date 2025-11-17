@@ -1,3 +1,4 @@
+//lib/database/registro-queries.ts
 import { query } from '@/lib/database/db';
 import { unstable_noStore as noStore } from 'next/cache';
 
@@ -13,9 +14,27 @@ export interface Registro {
   domicilio_eventual?: string;
   observacion?: string;
   observacion_cc?: boolean;
-  creado_por?: string;
-  actualizado_por?:string;
+  creado_por: string;
+  actualizado_por:string;
 }
+
+export type RegistroInsert = Omit<Registro, 'observacion_cc'> & {
+  observacion_cc?: boolean;
+};
+
+export type RegistroUpdate = Pick<
+  Registro,
+  | 'documento'
+  | 'tipo_documento'
+  | 'nombre'
+  | 'apellido'
+  | 'fecha_nacimiento'
+  | 'nacionalidad'
+  | 'domicilio_real'
+  | 'domicilio_eventual'
+  | 'observacion_cc'
+  | 'actualizado_por'
+>;
 
 /**
  * Obtiene todos los registros de la base de datos
@@ -152,7 +171,9 @@ export async function buscarRegistrosPorNombreApellidoDocumento(texto: string): 
 }
 
 // Insertar un nuevo registro
-export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'> & { observacion_cc?: boolean }): Promise<Registro> {
+export async function insertarRegistro(
+  registro: RegistroInsert
+): Promise<Registro> {
   const queryText = `
     INSERT INTO registro (
       documento, 
@@ -164,8 +185,9 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
       domicilio_real, 
       domicilio_eventual, 
       observacion_cc,
-      creado_por
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      creado_por,
+      actualizado_por
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *
   `;
   
@@ -179,7 +201,8 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
     registro.domicilio_real || null,
     registro.domicilio_eventual || null,
     registro.observacion_cc ?? false,
-    registro.creado_por || null,
+    registro.creado_por,
+    registro.actualizado_por,
   ];
   
   try{
@@ -190,7 +213,7 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
   }
 }
 
-export async function actualizarRegistroEnDB(registro: Registro, documentoViejo: string) {
+export async function actualizarRegistroEnDB(registro: RegistroUpdate, documentoViejo: string) {
   await query(
     `UPDATE registro SET
       tipo_documento = $1,
@@ -220,14 +243,16 @@ export async function actualizarRegistroEnDB(registro: Registro, documentoViejo:
   )
 }
 
-export async function actualizarObservacionRegistroEnDB(documento:string, observacion:string){
+export async function actualizarObservacionRegistroEnDB(documento:string, observacion:string, actualizado_por: string){
   await query(
     `UPDATE registro SET
-      observacion = $1
+      observacion = $1,
+      actualizado_por = $3
     WHERE documento = $2`,
     [
       observacion,
-      documento
+      documento,
+      actualizado_por
     ]
   )
 }
