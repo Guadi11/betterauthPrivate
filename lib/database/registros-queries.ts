@@ -13,6 +13,8 @@ export interface Registro {
   domicilio_eventual?: string;
   observacion?: string;
   observacion_cc?: boolean;
+  creado_por?: string;
+  actualizado_por?:string;
 }
 
 /**
@@ -161,8 +163,9 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
       nacionalidad, 
       domicilio_real, 
       domicilio_eventual, 
-      observacion_cc
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      observacion_cc,
+      creado_por
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *
   `;
   
@@ -175,7 +178,8 @@ export async function insertarRegistro(registro: Omit<Registro, 'observacion_cc'
     registro.nacionalidad || null,
     registro.domicilio_real || null,
     registro.domicilio_eventual || null,
-    registro.observacion_cc ?? false
+    registro.observacion_cc ?? false,
+    registro.creado_por || null,
   ];
   
   try{
@@ -197,7 +201,8 @@ export async function actualizarRegistroEnDB(registro: Registro, documentoViejo:
       nacionalidad = $5,
       domicilio_real = $6,
       domicilio_eventual = $7,
-      observacion_cc = $8
+      observacion_cc = $8,
+      actualizado_por = $11
      WHERE documento = $10`,
     [
       registro.tipo_documento,
@@ -209,7 +214,8 @@ export async function actualizarRegistroEnDB(registro: Registro, documentoViejo:
       registro.domicilio_eventual ?? null,
       registro.observacion_cc,
       registro.documento,
-      documentoViejo
+      documentoViejo,
+      registro.actualizado_por
     ]
   )
 }

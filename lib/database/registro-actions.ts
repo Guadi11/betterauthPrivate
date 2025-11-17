@@ -6,6 +6,7 @@ import { RegistroSchema, RegistroFormData } from '@/lib/zod/registro-schemas';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { DatabaseError } from 'pg';
+import { requireUserId } from "@/lib/auth/session";
 
 type ActionErrorFields = Partial<Record<keyof RegistroFormData, string>>;
 type CrearRegistroResult =
@@ -29,6 +30,9 @@ export async function crearRegistro(raw: unknown): Promise<CrearRegistroResult> 
   const data = parsed.data;
 
   try {
+    // 1) Obtenemos el ID del usuario autenticado
+    const userId = await requireUserId();
+    console.log(userId);
     const registro: Registro = {
       documento: data.documento,
       tipo_documento: data.tipo_documento,
@@ -39,6 +43,7 @@ export async function crearRegistro(raw: unknown): Promise<CrearRegistroResult> 
       domicilio_real: data.domicilio_real || undefined,
       domicilio_eventual: data.domicilio_eventual || undefined,
       observacion_cc: data.observacion_cc,
+      creado_por: userId,
     };
 
     const nuevoRegistro = await insertarRegistro(registro);
@@ -85,6 +90,7 @@ export async function crearRegistro(raw: unknown): Promise<CrearRegistroResult> 
 
 export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, documentoViejo: string) {
   try{
+    const userId = await requireUserId();
     const registro: Registro = {
       documento: data.documento,
       tipo_documento: data.tipo_documento,
@@ -94,7 +100,8 @@ export async function actualizarRegistro(data: z.infer<typeof RegistroSchema>, d
       nacionalidad: data.nacionalidad || undefined,
       domicilio_real: data.domicilio_real || undefined,
       domicilio_eventual: data.domicilio_eventual || undefined,
-      observacion_cc: data.observacion_cc
+      observacion_cc: data.observacion_cc,
+      actualizado_por: userId,
     }
 
     await actualizarRegistroEnDB(registro, documentoViejo)
