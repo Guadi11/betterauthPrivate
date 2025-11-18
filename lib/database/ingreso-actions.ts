@@ -1,58 +1,100 @@
 'use server'
 
 import { IngresoConSolicitanteSchema } from '@/lib/zod/ingreso-schemas';
-import { darSalida, Ingreso, insertarIngreso } from '@/lib/database/ingreso-queries';
+import { registrarSalida, insertarIngreso } from '@/lib/database/ingreso-queries';
 import { z } from 'zod';
 import { insertarSolicitante, obtenerSolicitanteConId } from '@/lib/database/solicitante-queries';
 import { DatabaseError } from 'pg';
+import { requireUserId } from "@/lib/auth/session"; // Importante: Auth
 
-type SalidaOK = { success: true; data: Ingreso };
+// Tipos de respuesta actualizados
+type SalidaOK = { success: true; };
 type SalidaErr = {
   success: false;
   error: string;
-  meta?: { code?: string; constraint?: string; detail?: string };
+  code?: string; // Para identificar el tipo de error en el frontend
 };
 export type RealizarSalidaResult = SalidaOK | SalidaErr;
 
-export async function realizarSalida(id_ingreso: number): Promise<RealizarSalidaResult> {
+/**
+ * Esquema para validar los datos de salida que vienen del cliente
+ */
+const SalidaSchema = z.object({
+    id_ingreso: z.number(),
+    fecha_egreso: z.date().optional(), // Si no viene, se usa new Date()
+    motivo: z.string().optional(),     // Solo necesario si > 24h
+});
+
+export async function realizarSalida(rawInput: z.infer<typeof SalidaSchema>): Promise<RealizarSalidaResult> {
+  
+  const validation = SalidaSchema.safeParse(rawInput);
+  if(!validation.success) {
+      return { success: false, error: "Datos de salida inválidos" };
+  }
+  
+  const { id_ingreso, fecha_egreso, motivo } = validation.data;
+  // Usamos la fecha provista o la actual si no vino ninguna
+  const fechaFinal = fecha_egreso ?? new Date();
+
   try {
-    const resultado = await darSalida(id_ingreso);
+    const userId = await requireUserId(); // Auditoría: ¿Quién cierra?
+
+    const resultado = await registrarSalida(id_ingreso, userId, fechaFinal, motivo);
+    
     if (!resultado) {
-      // Nada para actualizar (ya tenía egreso o no existe)
       return {
         success: false,
         error: 'El ingreso no existe o ya tiene registrada la salida.',
       };
     }
-    return { success: true, data: resultado };
+    return { success: true };
+
   } catch (err: unknown) {
     const e = err as DatabaseError;
-    const key = `${e.code ?? ''}|${e.constraint ?? ''}`;
+    
+    // Manejo del error específico del Trigger (> 24h sin motivo)
+    // El trigger lanza RAISE EXCEPTION que llega como 'P0001' (default raise) o un error interno.
+    // Buscamos el mensaje de texto que definimos en el trigger.
+    
+    const errorMsg = e.message || '';
+    
+    // Si el trigger salta pidiendo motivo (validacion > 24h)
+    if (errorMsg.includes('motivo de cierre fuera de término')) {
+        return {
+            success: false,
+            error: 'El ingreso supera las 24hs. Se requiere justificación.',
+            code: 'REQUIERE_MOTIVO_CIERRE' // El frontend usará esto para abrir el Modal
+        };
+    }
 
-    // Mensajes “amigables” por constraint/código
-    const friendlyByKey: Record<string, string> = {
-      // 23514 = check_violation
-      '23514|chk_max_duracion_visita':
-        'La visita excede la duración máxima permitida (24 h). No se puede registrar la salida automática. Use “Cerrar fuera de término”.',
-    };
+    // Si el trigger salta por fecha egreso < fecha ingreso
+    if (errorMsg.includes('anterior a la fecha de ingreso')) {
+        return {
+            success: false,
+            error: 'La fecha de egreso no puede ser anterior al ingreso.',
+            code: 'FECHA_INVALIDA'
+        };
+    }
 
-    const friendly = friendlyByKey[key];
-
+    console.error("Error al cerrar ingreso:", e);
     return {
       success: false,
-      error: friendly ?? e.message ?? 'No se pudo registrar la salida.',
-      meta: {
-        code: e.code,
-        constraint: e.constraint,
-        // Algunos drivers tipan `detail` como opcional; lo sacamos de forma segura:
-        detail: (e as unknown as { detail?: string }).detail,
-      },
+      error: e.message ?? 'No se pudo registrar la salida.',
+      code: e.code
     };
   }
 }
 
 export async function darIngreso(documento: string, data: z.infer<typeof IngresoConSolicitanteSchema>) {
   const { ingreso, solicitante } = data;
+
+  // Validar Auth
+  let userId: string;
+  try {
+      userId = await requireUserId();
+  } catch (e) {
+      return { ok: false as const, type: 'auth', field: 'root', message: 'Sesión expirada.' };
+  }
 
   // Verificamos si el solicitante ya existe
   const solicitanteExistente = await obtenerSolicitanteConId(data.solicitante.identificador);
@@ -68,20 +110,15 @@ export async function darIngreso(documento: string, data: z.infer<typeof Ingreso
       motivo: ingreso.motivo,
       observacion: ingreso.observacion,
       identificador_solicitante: solicitante.identificador,
+      abierto_por: userId, // Auditoría
     });
 
     return { ok: true as const };
   } catch (err: unknown) {
-    // PostgreSQL
-    // code: '23505' = unique_violation
-    // code: '23514' = check_violation
-    // code: '23503' = foreign_key_violation
-    // code: '23502' = not_null_violation
     const e = err as DatabaseError;
     const pgCode = e.code;
     const constraint = e.constraint;
 
-    // Mensajes amigables por caso
     if (pgCode === '23505' && constraint === 'ux_tarjeta_abierta') {
       return {
         ok: false as const,
@@ -99,26 +136,9 @@ export async function darIngreso(documento: string, data: z.infer<typeof Ingreso
         message: 'Este registro ya tiene un ingreso abierto. Primero registre el egreso.',
       };
     }
+    
+    // ... resto de errores igual ...
 
-    if (pgCode === '23503' && constraint === 'fk_documento') {
-      return {
-        ok: false as const,
-        type: 'registro_inexistente',
-        field: 'root',
-        message: 'No se encontró el registro (documento) en la base de datos.',
-      };
-    }
-
-    if (pgCode === '23514' && constraint === 'chk_duracion_visita') {
-      return {
-        ok: false as const,
-        type: 'duracion_invalida',
-        field: 'root',
-        message: 'La duración de la visita es inválida (egreso antes del ingreso o > 24hs).',
-      };
-    }
-
-    // Fallback genérico: devolvemos info básica para debug
     return {
       ok: false as const,
       type: 'desconocido',
