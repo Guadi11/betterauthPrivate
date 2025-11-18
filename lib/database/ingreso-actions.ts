@@ -93,7 +93,7 @@ export async function darIngreso(documento: string, data: z.infer<typeof Ingreso
   try {
       userId = await requireUserId();
   } catch (e) {
-      return { ok: false as const, type: 'auth', field: 'root', message: 'Sesión expirada.' };
+      return { ok: false as const, type: 'auth', field: 'root', message: e};
   }
 
   // Verificamos si el solicitante ya existe
