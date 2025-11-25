@@ -65,12 +65,21 @@ export function RegistrarSalidaDialog({ id_ingreso, fecha_ingreso }: Props) {
   const [excede24hs, setExcede24hs] = useState(false);
 
   useEffect(() => {
-    if (fechaEgresoWatch) {
-      const fechaEgresoDate = new Date(fechaEgresoWatch);
-      const horas = differenceInHours(fechaEgresoDate, fechaIngresoDate);
-      setExcede24hs(horas >= 24);
-    }
-  }, [fechaEgresoWatch, fechaIngresoDate]);
+      // 1. Calculamos si la "Visita" dura más de 24h (según lo que el usuario escribe)
+      let visitaLarga = false;
+      if (fechaEgresoWatch) {
+        const fechaEgresoDate = new Date(fechaEgresoWatch);
+        visitaLarga = differenceInHours(fechaEgresoDate, fechaIngresoDate) >= 24;
+      }
+
+      // 2. Calculamos si es un "Olvido Administrativo" (Hoy vs Ingreso > 24h)
+      // Usamos new Date() para el momento actual
+      const olvidoAdministrativo = differenceInHours(new Date(), fechaIngresoDate) >= 24;
+
+      // Si cualquiera de los dos ocurre, exigimos motivo
+      setExcede24hs(visitaLarga || olvidoAdministrativo);
+
+    }, [fechaEgresoWatch, fechaIngresoDate])
 
   async function onSubmit(values: z.infer<typeof salidaFormSchema>) {
     // Validación extra: Si excede 24hs, motivo es obligatorio
