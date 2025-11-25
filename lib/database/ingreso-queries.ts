@@ -34,6 +34,51 @@ export interface IngresoCompleto extends IngresoConSolicitante {
   tipo_documento_registro: string;
 }
 
+export interface EstadisticasIngreso {
+  ingresos_hoy: number;
+  ingresos_ayer: number;
+  ingresos_totales: number;
+  ingresos_zr_hoy: number;
+}
+
+// --- NUEVA FUNCIÓN PARA EL DASHBOARD ---
+export async function obtenerEstadisticasDashboard(): Promise<EstadisticasIngreso> {
+  noStore(); // Evita que Next.js cachee estos números estáticamente
+
+  // Usamos FILTER de Postgres para contar condicionalmente en una sola consulta
+  // Asumimos que 'ZR' se busca en 'lugar_visita'. Si es en otro campo, cambialo abajo.
+  const queryText = `
+    SELECT
+      COUNT(*) FILTER (WHERE fecha_ingreso::date = CURRENT_DATE) as ingresos_hoy,
+      COUNT(*) FILTER (WHERE fecha_ingreso::date = CURRENT_DATE - 1) as ingresos_ayer,
+      COUNT(*) as ingresos_totales,
+      COUNT(*) FILTER (WHERE fecha_ingreso::date = CURRENT_DATE AND lugar_visita ILIKE '%ZR%') as ingresos_zr_hoy
+    FROM ingreso_por_dia
+  `;
+
+  try {
+    const result = await query(queryText);
+    const row = result.rows[0];
+
+    // Postgres devuelve los counts como strings (bigint), los parseamos a number
+    return {
+      ingresos_hoy: Number(row.ingresos_hoy || 0),
+      ingresos_ayer: Number(row.ingresos_ayer || 0),
+      ingresos_totales: Number(row.ingresos_totales || 0),
+      ingresos_zr_hoy: Number(row.ingresos_zr_hoy || 0),
+    };
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    // Retornamos ceros para no romper la UI si falla la DB
+    return {
+      ingresos_hoy: 0,
+      ingresos_ayer: 0,
+      ingresos_totales: 0,
+      ingresos_zr_hoy: 0
+    };
+  }
+}
+
 export async function obtenerIngresosPorDocumento(documento: string): Promise<IngresoConSolicitante[]> {
   noStore();
 
