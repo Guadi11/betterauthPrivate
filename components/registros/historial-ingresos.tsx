@@ -68,7 +68,7 @@ export function HistorialIngresos({ ingresos }: Props) {
                           // CASO: ABIERTO (En planta)
                           <div className="flex flex-col gap-2 items-start">
                              <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200 shadow-none">
-                              En planta
+                              Dentro de BNPB
                             </Badge>
                             <RegistrarSalidaDialog 
                               id_ingreso={ingreso.id_ingreso} 
