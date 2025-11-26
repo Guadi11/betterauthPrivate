@@ -10,10 +10,8 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import {
-  listarDisenos,
-  type DisenoPatListItem,
-} from '@/lib/database/diseno-pat-queries';
+import { listarDisenos } from '@/lib/database/diseno-pat-queries';
+import { type DisenoPatListItem } from '@/lib/pat/disenos/diseno-pat-types';
 import RowActions from './row-actions';
 
 function statusToBadgeVariant(
