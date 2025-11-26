@@ -47,6 +47,7 @@ export async function obtenerEstadisticasDashboard(): Promise<EstadisticasIngres
 
   // Usamos FILTER de Postgres para contar condicionalmente en una sola consulta
   // Asumimos que 'ZR' se busca en 'lugar_visita'. Si es en otro campo, cambialo abajo.
+  // Otra opcion para buscar 'ZR' podria ser en la tarjeta
   const queryText = `
     SELECT
       COUNT(*) FILTER (WHERE fecha_ingreso::date = CURRENT_DATE) as ingresos_hoy,
