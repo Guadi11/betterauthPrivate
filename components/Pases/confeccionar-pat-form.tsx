@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import SolicitanteSection from "@/components/solicitantes/seleccion-solicitante"
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+// --- Tipos y Definiciones ---
 
 type PatTipo = "ZC" | "ZR" | "HN" | "PS" | "OT";
 
@@ -40,11 +42,40 @@ interface Props {
   onSubmit: (documento: string, values: PatFormValues) => Promise<SubmitResult>;
 }
 
+// --- Helper para calcular fechas ---
+// Nota: Usamos 'T00:00:00' para asegurar que la fecha se interprete en hora local
+// y evitar desfases de día por zonas horarias (UTC vs Local).
+function calcularFechaVencimiento(fechaBase: string, tipo: "59_dias" | "3_meses" | "1_anio"): string {
+  if (!fechaBase) return "";
+  
+  const d = new Date(`${fechaBase}T00:00:00`); 
+  
+  switch (tipo) {
+    case "59_dias":
+      d.setDate(d.getDate() + 59);
+      break;
+    case "3_meses":
+      d.setMonth(d.getMonth() + 3);
+      break;
+    case "1_anio":
+      d.setFullYear(d.getFullYear() + 1);
+      break;
+  }
+
+  // Formato YYYY-MM-DD
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+// --- Componente Principal ---
+
 export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  // Fecha de hoy por defecto
   const today = useMemo(() => {
     const d = new Date();
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -74,12 +105,35 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
     mode: "onSubmit",
   });
 
+  // Observamos la fecha de extensión en tiempo real para el cálculo
+  const fechaExtension = useWatch({ control: methods.control, name: "pat.fecha_extension" });
+
+  // Handler para el selector rápido
+  const handleDuracionChange = (value: string) => {
+    if (!fechaExtension) {
+      toast.warning("Seleccione primero una fecha de extensión");
+      return;
+    }
+    
+    const nuevaFecha = calcularFechaVencimiento(
+      fechaExtension, 
+      value as "59_dias" | "3_meses" | "1_anio"
+    );
+    
+    methods.setValue("pat.fecha_vencimiento", nuevaFecha, { 
+      shouldValidate: true, 
+      shouldDirty: true 
+    });
+  };
+
   const handleSubmit = (values: PatFormValues) => {
     setServerError(null);
 
-    // Validación simple: vencimiento >= extensión
-    const ext = new Date(values.pat.fecha_extension);
-    const ven = new Date(values.pat.fecha_vencimiento);
+    // Validación manual de fechas (Vencimiento >= Extensión)
+    // Usamos T00:00:00 también aquí por consistencia
+    const ext = new Date(`${values.pat.fecha_extension}T00:00:00`);
+    const ven = new Date(`${values.pat.fecha_vencimiento}T00:00:00`);
+    
     if (values.pat.fecha_vencimiento && ven < ext) {
       methods.setError("pat.fecha_vencimiento", {
         type: "manual",
@@ -88,33 +142,33 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
       return;
     }
 
-    // (Opcional) normalizaciones mínimas
+    // Normalizaciones mínimas
     values.pat.nro_interno = values.pat.nro_interno.trim();
     values.pat.acceso_pat = values.pat.acceso_pat.trim();
 
     startTransition(async () => {
-  const res = await onSubmit(documento, values);
-  if (!res.ok) {
-    const msg = res.message;              // ✅ sin any
-    setServerError(msg);
-    toast.error(msg);
-    return;
-  }
-  methods.reset({
-    ...methods.getValues(),
-    pat: {
-      ...methods.getValues().pat,
-      acceso_pat: "",
-      nro_interno: "",
-      causa_motivo_pat: "",
-    },
-  });
-
-      // 1) Toast de éxito
-      toast.success("PAT confeccionado correctamente.");
-      // 2) Redirección al perfil del registro
-      router.push(`/registro/${encodeURIComponent(documento)}`);
+      const res = await onSubmit(documento, values);
+      if (!res.ok) {
+        const msg = res.message;
+        setServerError(msg);
+        toast.error(msg);
+        return;
+      }
+      
+      // Reset parcial (limpiamos campos específicos)
+      methods.reset({
+        ...methods.getValues(),
+        pat: {
+          ...methods.getValues().pat,
+          acceso_pat: "",
+          nro_interno: "",
+          causa_motivo_pat: "",
+        },
       });
+
+      toast.success("PAT confeccionado correctamente.");
+      router.push(`/registro/${encodeURIComponent(documento)}`);
+    });
   };
 
   return (
@@ -133,6 +187,7 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
 
           {/* Campos del PAT */}
           <div className="grid gap-6 md:grid-cols-2">
+            
             <FormField
               control={methods.control}
               name="pat.fecha_extension"
@@ -148,20 +203,40 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               )}
             />
 
-            <FormField
-              control={methods.control}
-              name="pat.fecha_vencimiento"
-              rules={{ required: "Requerido" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha de vencimiento <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Selector de Duración Rápida + Input de Vencimiento */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <FormLabel className={serverError ? "text-destructive" : ""}>
+                    Fecha de vencimiento <span className="text-red-500">*</span>
+                </FormLabel>
+                
+                {/* Selector rápido (sin vincular al form state directamente) */}
+                <Select onValueChange={handleDuracionChange}>
+                    <SelectTrigger className="h-7 w-[140px] text-xs px-2 bg-slate-100 border-slate-300">
+                        <SelectValue placeholder="Cálculo rápido" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="59_dias">59 Días</SelectItem>
+                        <SelectItem value="3_meses">3 Meses</SelectItem>
+                        <SelectItem value="1_anio">1 Año</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
+
+              <FormField
+                control={methods.control}
+                name="pat.fecha_vencimiento"
+                rules={{ required: "Requerido" }}
+                render={({ field }) => (
+                  <FormItem className="space-y-0">
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={methods.control}
@@ -220,7 +295,7 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
                     <Input
                       type="text"
                       inputMode="numeric"      // teclado numérico en mobile
-                      pattern="\d*"            // hint HTML; no reemplaza la validación
+                      pattern="\d*"            // hint HTML
                       maxLength={5}
                       placeholder="12345"
                       {...field}
