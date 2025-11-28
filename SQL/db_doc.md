@@ -2,12 +2,12 @@
 
 **Fecha de última actualización:** 28/11/2025
 **Motor de Base de Datos:** PostgreSQL
-**Responsable:** [Tu Nombre]
+**Responsable:** Navarro Ramiro Ezequiel
 
 ---
 
 ## 1. Introducción y Contexto del Proyecto
-Este documento describe el esquema de base de datos para el subsistema de **Negocio** de la aplicación. El sistema tiene como objetivo gestionar el ciclo de vida de los accesos físicos a las instalaciones, desde la solicitud de autorización hasta el registro efectivo del ingreso/egreso, así como la gestión y diseño de las credenciales físicas (Pases de Acceso Transitorio - PAT).
+Este documento describe el esquema de base de datos para el subsistema de **Gestion de Ingresos Diarios y Pases de Acceso Transitorio (SiGIDPAT)** de la aplicación. El sistema tiene como objetivo gestionar el ciclo de vida de los accesos físicos a las instalaciones, desde la solicitud de autorización hasta el registro efectivo del ingreso/egreso, así como la gestión y diseño de las credenciales físicas (Pases de Acceso Transitorio - PAT).
 
 **Alcance:**
 * Registro de personas y antecedentes.
@@ -30,7 +30,7 @@ La estructura se define en tres niveles:
 ---
 
 ## 3. Módulo A: Gestión de Accesos y Personas
-Este módulo centraliza la información de los individuos externos e internos y sus movimientos físicos dentro del perímetro.
+Este módulo centraliza la información de los individuos externos e internos y sus movimientos físicos dentro de la BNPB.
 
 ### 3.1 Tabla: `registro`
 **Descripción:** Maestro de personas. Almacena los datos filiatorios de cualquier individuo que interactúa con el sistema (visitas, personal, contratistas). Utiliza el número de documento como clave natural.
@@ -51,7 +51,7 @@ Este módulo centraliza la información de los individuos externos e internos y 
 | `actualizado_por` | VARCHAR | Sí | Último usuario que modificó el registro. |
 
 ### 3.2 Tabla: `solicitante`
-**Descripción:** Catálogo de autoridades o personal interno habilitado para solicitar o autorizar el ingreso de terceros.
+**Descripción:** Catálogo de autoridades o personal interno militar habilitado para solicitar o autorizar el ingreso de terceros.
 
 | Columna | Tipo de Dato | Requerido | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -69,33 +69,33 @@ Este módulo centraliza la información de los individuos externos e internos y 
 | :--- | :--- | :---: | :--- |
 | `id` | INT | **Sí (PK)** | Identificador autoincremental del pase. |
 | `documento_registro`| VARCHAR | Sí (FK) | Vincula con `registro.documento`. Quién recibe el pase. |
-| `identificador_solicitante` | VARCHAR | Sí (FK) | Vincula con `solicitante.identificador`. Quién autoriza. |
+| `identificador_solicitante` | VARCHAR | Sí (FK) | Vincula con `solicitante.identificador`. Quién autoriza y solicita el pase. |
 | `nro_interno` | VARCHAR | Sí | Número de control interno / expediente físico. |
 | `fecha_extension` | DATE | Sí | Fecha en la que se emitió/extendió la autorización. |
 | `fecha_vencimiento` | DATE | Sí | Fecha límite de validez del pase. |
-| `tipo_zona` | VARCHAR | Sí | Zona permitida (Ej: 'Planta Baja', 'Área Restringida'). |
-| `acceso_pat` | VARCHAR | Sí | [TODO: Definir qué diferencia hay con tipo_zona]. |
+| `tipo_zona` | VARCHAR | Sí | Zona permitida (Ej: 'ZC', 'ZR', 'HNPB'). |
+| `acceso_pat` | VARCHAR | Sí | Acceso a. (Ej: 'SIAG', 'SISA')| 
 | `causa_motivo_pat` | TEXT | Sí | Justificación de la solicitud. |
 | `codigo_de_seguridad`| VARCHAR | Sí | Hash o código para validación rápida (QR). |
 
 ### 3.4 Tabla: `ingreso_por_dia`
-**Descripción:** Bitácora transaccional (Log). Registra cada evento físico de entrada y salida.
+**Descripción:** Bitácora transaccional. Registra cada evento físico de entrada y salida por día. 
 
 | Columna | Tipo de Dato | Requerido | Descripción |
 | :--- | :--- | :---: | :--- |
 | `id_ingreso` | INT | **Sí (PK)** | Identificador único del evento. |
 | `documento` | VARCHAR | Sí (FK) | Vincula con la persona que ingresa. |
-| `nro_tarjeta` | VARCHAR | Sí | Número de la tarjeta RFID/Magnética entregada temporalmente. |
+| `nro_tarjeta` | VARCHAR | Sí | Número de la tarjeta entregada temporalmente. |
 | `fecha_ingreso` | TIMESTAMP | Sí | Fecha y hora exacta de entrada. |
 | `fecha_egreso` | TIMESTAMP | No | Fecha y hora exacta de salida. `NULL` si aún está dentro. |
-| `lugar_visita` | VARCHAR | Sí | Oficina específica a la que se dirige hoy. |
+| `lugar_visita` | VARCHAR | Sí | Destino específico al que se dirige hoy. |
 | `motivo` | TEXT | Sí | Motivo puntual del día (ej: "Reunión", "Mantenimiento"). |
 | `observacion` | TEXT | No | Notas del guardia de turno. |
 | `identificador_solicitante` | VARCHAR | Sí | Referencia al solicitante de este ingreso específico. |
 | `abierto_por` | TEXT | No | Usuario (Guardia) que registró la entrada. |
 | `cerrado_por` | TEXT | No | Usuario (Guardia) que registró la salida. |
-| `cierre_fuera_de_tiempo` | BOOLEAN | No | Flag. `True` si el sistema cerró el ingreso automáticamente por fin de jornada. |
-| `motivo_cierre_...` | TEXT | No | Justificación del cierre forzoso o manual posterior. |
+| `cierre_fuera_de_tiempo` | BOOLEAN | No | Flag. `True` si el personal cerró el ingreso fuera de termino, o la persona permaneció mas de 24hs. |
+| `motivo_cierre_...` | TEXT | No | Justificación del cierre fuera de tiempo. |
 
 ---
 
@@ -108,11 +108,11 @@ Este módulo gestiona la composición visual de las credenciales, permitiendo di
 | Columna | Tipo de Dato | Requerido | Descripción |
 | :--- | :--- | :---: | :--- |
 | `id` | BIGINT | **Sí (PK)** | Identificador del diseño. |
-| `nombre` | TEXT | Sí | Nombre descriptivo (ej: "Pase Visita Técnica 2025"). |
+| `nombre` | TEXT | Sí | Nombre descriptivo (ej: "Pase Familiar"). |
 | `ancho_mm` | NUMERIC | Sí | Ancho físico de la tarjeta en milímetros. |
 | `alto_mm` | NUMERIC | Sí | Alto físico de la tarjeta en milímetros. |
 | `dpi_previsualizacion`| INT | Sí | Resolución para renderizado en pantalla. |
-| `lienzo_json` | JSONB | Sí | **Core.** Estructura JSON con coordenadas, textos estáticos y configuración visual. |
+| `lienzo_json` | JSONB | Sí | **Core.** Estructura JSON con coordenadas, textos estáticos y configuración visual. Se utiliza la serializacion de konva para guardar el diseño. |
 | `estado` | TEXT | Sí | Ej: 'Borrador', 'Publicado', 'Archivado'. |
 
 ### 4.2 Tabla: `recurso`
