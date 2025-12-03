@@ -14,6 +14,8 @@ export default async function PaginaImprimirPAT({
   const { id } = await params;
   const { diseno } = await searchParams;
 
+  const usuarioActual = "usuariocivil";
+
   const idPatNum = Number(id);
   if (!idPatNum || !diseno) notFound();
 
@@ -35,6 +37,7 @@ export default async function PaginaImprimirPAT({
       dpi_previsualizacion: dis.dpi_previsualizacion,
       lienzo_json: dis.lienzo_json,
     },
+    impreso_por: usuarioActual,
   };
 
   return (

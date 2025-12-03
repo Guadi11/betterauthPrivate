@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Konva from "konva";
 import ImageNext from "next/image";
 import { construirVarsDesdePat, type RenderVars } from "@/lib/pat/impresion/vars";
+import { logPrintAttempt } from "@/lib/database/log-impresion-actions";
 
 type Payload = {
   pat: {
@@ -35,6 +36,9 @@ export default function PrintPatClient({ payload }: { payload: Payload }) {
   const vars: RenderVars = useMemo(() => construirVarsDesdePat(pat), [pat]);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  // Flag para evitar doble log en React Strict Mode
+  const logEnviado = useRef(false);
 
   useEffect(() => {
   const container = containerRef.current;
@@ -119,11 +123,31 @@ export default function PrintPatClient({ payload }: { payload: Payload }) {
   // Lanza impresión automática cuando la imagen esté lista
   useEffect(() => {
     if (!dataUrl) return;
-    const t = setTimeout(() => {
-      window.print();
-    }, 100); // pequeño delay para pintar
-    return () => clearTimeout(t);
-  }, [dataUrl]);
+    if (logEnviado.current) return;
+
+    const procesarImpresion = async () => {
+      logEnviado.current = true;
+
+      // Llamamos a la Server Action (ahora sin pasar usuario)
+      const resultado = await logPrintAttempt({
+        pat_id: pat.id,
+        diseno_id: diseno.id,
+        variables_resueltas: vars as Record<string, string>,
+      });
+
+      if (!resultado.ok) {
+        console.error("Fallo auditoría de impresión:", resultado.error);
+        // Opcional: alert("Error al registrar auditoría");
+        // Decidimos seguir e imprimir igual, o bloquear. Normalmente se imprime igual.
+      }
+
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    };
+
+    procesarImpresion();
+  }, [dataUrl, pat.id, diseno.id, vars]);
 
   return (
   <div id="print-root" className="w-full">
