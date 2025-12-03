@@ -5,9 +5,9 @@ Este módulo tiene como objetivo registrar de manera inalterable la intención d
 
 ### Objetivos Clave
 
-* Trazabilidad: Saber quién, cuándo y qué diseño se utilizó.
-* Integridad: Guardar una "foto" de los datos exactos que salieron en el pase (variables resueltas) en formato JSON, independientemente de cambios futuros en el registro de la persona.
-* Seguridad: Garantizar que el usuario que figura en el log es el que tiene la sesión activa (backend-verified).
+* **Trazabilidad:** Saber quién, cuándo y qué diseño se utilizó.
+* **Integridad:** Guardar una "foto" de los datos exactos que salieron en el pase (variables resueltas) en formato JSON, independientemente de cambios futuros en el registro de la persona.
+* **Seguridad:** Garantizar que el usuario que figura en el log es el que tiene la sesión activa (backend-verified).
 ## 2. Arquitectura de Datos
 
 Tabla: `log_impresion_pat`
@@ -16,13 +16,13 @@ Almacena el registro histórico de impresiones.
 
 | Columna | Tipo |Descripción |
 | :--- | :--- | :--- |
-| id | bigint| Identificador único del evento (PK).| 
-| pat_id | bigint | Referencia al Pase (pases_acceso_transitorio). |
-| diseno_id | bigint | Referencia al Diseño usado (diseno_pat). | 
-| impreso_por| text| ID del usuario que autorizó la impresión (obtenido de sesión). |
-| impreso_en| timestamptz | Fecha y hora exacta del evento. |
-| copias| integer | Cantidad de copias solicitadas (por defecto 1). |
-| variables_resueltas| JSONB | Snapshot de los valores inyectados en el diseño (Nombre, DNI, Fechas, etc.). |
+| `id` | bigint| Identificador único del evento (PK).| 
+| `pat_id` | bigint | Referencia al Pase (pases_acceso_transitorio). |
+| `diseno_id` | bigint | Referencia al Diseño usado (diseno_pat). | 
+| `impreso_por`| text| ID del usuario que autorizó la impresión (obtenido de sesión). |
+| `impreso_en`| timestamptz | Fecha y hora exacta del evento. |
+| `copias`| integer | Cantidad de copias solicitadas (por defecto 1). |
+| `variables_resueltas`| JSONB | Snapshot de los valores inyectados en el diseño (Nombre, DNI, Fechas, etc.). |
 
 ## 3. Flujo de Ejecución
 
