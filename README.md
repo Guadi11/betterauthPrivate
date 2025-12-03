@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema de Control de Ingresos y Gestión de Pases de Acceso Transitorios
 
-## Getting Started
+![Estado del Proyecto](https://img.shields.io/badge/Estado-En_Desarrollo-yellow)
+![Versión](https://img.shields.io/badge/Versión-1.0.0-blue)
 
-First, run the development server:
+Proyecto desarrollado en el **SIAG** para la **Base Naval Puerto Belgrano (BNPB)**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Desarrollado por:**
+* MITV Navarro Ramiro Ezequiel
+* Guillermo Soler Vidal (Colaborador Principal)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📋 Descripción del Proyecto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El objetivo de este proyecto es reemplazar el sistema heredado (Microsoft Access) por una aplicación web moderna, robusta y escalable.
 
-## Learn More
+El sistema permite que todos los registros de ingresos y egresos estén disponibles para consulta permanente, facilitando el control y los estudios de seguridad. Soluciona la falta de intuición del sistema anterior, incorporando búsquedas con filtros avanzados, generación de reportes e impresión de pases.
 
-To learn more about Next.js, take a look at the following resources:
+### Problemas que resuelve:
+* **Centralización:** Reemplazo de registros manuales y bases de datos aisladas.
+* **Usabilidad:** Interfaz moderna e intuitiva frente a la complejidad de MS Access.
+* **Consultas:** Capacidad de filtrar y buscar datos históricos rápidamente.
+* **Impresión:** Módulo dedicado para la impresión de credenciales y pases.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Objetivos Principales
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* **Celeridad:** Atender rápidamente todas las solicitudes de acceso y vinculaciones.
+* **Seguridad y Legalidad:** Cumplir con los requisitos legales y reglamentarios de la BNPB.
+* **Trazabilidad:** Identificar y seguir los ingresos a Zona Reservada y Zona Restringida.
+* **Estabilidad:** Minimizar las fallas recurrentes del sistema anterior.
+* **Escalabilidad:** Arquitectura preparada para futuras actualizaciones.
 
-## Deploy on Vercel
+## 🛠️ Stack Tecnológico
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Este proyecto utiliza tecnologías web modernas para asegurar rendimiento y facilidad de mantenimiento.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* **Frontend:** [Next.js](https://nextjs.org) (App Router)
+* **Lenguaje:** TypeScript
+* **Estilos:** [Tailwind CSS - ShadCN]
+* **Base de Datos:** [PostgreSQL - node pg]
+* **Autenticación:** [BetterAuth]
+
+## 💻 Instalación y Puesta en Marcha
+
+Sigue estos pasos para ejecutar el proyecto en un entorno local.
+
+### Prerrequisitos
+* Node.js (Versión 18 o superior)
+* PostgreSQL
+
+### Pasos
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://gitlabsiag.armada.mil.ar/sio/betterauth.git
+    cd nombre-del-proyecto
+    ```
+
+2.  **Instalar dependencias:**
+    ```bash
+    npm install
+    # o si usas yarn
+    yarn install
+    ```
+
+3.  **Configurar Variables de Entorno:**
+    Crea un archivo `.env.local` en la raíz del proyecto basándote en el archivo de ejemplo.
+    ```bash
+    cp .env.example .env.local
+    ```
+    *Asegúrate de configurar las credenciales de la base de datos en este archivo.*
+
+4.  **Ejecutar el servidor de desarrollo:**
+    ```bash
+    npm run dev
+    ```
+
+5.  **Verificar:**
+    Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+
+## 📄 Visión del Producto
+
+> **Para** la BASE NAVAL PUERTO BELGRANO (CARGO CONTRA-INTELIGENCIA), **quien** tiene la necesidad de contar con información para el seguimiento del personal dentro de Zona Reservada y Restringida.
+>
+> **El** Sistema de Control de Ingresos es una aplicación web **que** permite registrar, consultar, imprimir y auditar los movimientos en la base de manera ágil.
+>
+> **A diferencia de** los registros manuales o el sistema en Microsoft Access, **nuestro producto** ofrece una base de datos centralizada con formularios electrónicos y reportes web modernos.
+
+---
+© 2024 - SIAG - Base Naval Puerto Belgrano
