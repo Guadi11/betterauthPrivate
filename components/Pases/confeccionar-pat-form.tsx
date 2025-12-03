@@ -42,23 +42,47 @@ interface Props {
   onSubmit: (documento: string, values: PatFormValues) => Promise<SubmitResult>;
 }
 
+// --- Definimos los tipos de duración disponibles ---
+type TipoDuracion = 
+  | "1_mes" 
+  | "59_dias" 
+  | "3_meses" 
+  | "6_meses" 
+  | "fin_anio" 
+  | "1_anio" 
+  | "3_anios";
+
 // --- Helper para calcular fechas ---
-// Nota: Usamos 'T00:00:00' para asegurar que la fecha se interprete en hora local
-// y evitar desfases de día por zonas horarias (UTC vs Local).
-function calcularFechaVencimiento(fechaBase: string, tipo: "59_dias" | "3_meses" | "1_anio"): string {
+function calcularFechaVencimiento(fechaBase: string, tipo: TipoDuracion): string {
   if (!fechaBase) return "";
   
+  // Usamos T00:00:00 para evitar problemas de TimeZone
   const d = new Date(`${fechaBase}T00:00:00`); 
   
   switch (tipo) {
+    case "1_mes":
+      d.setMonth(d.getMonth() + 1);
+      break;
     case "59_dias":
       d.setDate(d.getDate() + 59);
       break;
     case "3_meses":
       d.setMonth(d.getMonth() + 3);
       break;
+    case "6_meses":
+      d.setMonth(d.getMonth() + 6);
+      break;
+    case "fin_anio":
+      // Mes 11 es Diciembre (0-indexed), Día 31
+      // Mantenemos el año de la fecha base (fecha de extensión)
+      d.setMonth(11); 
+      d.setDate(31);
+      break;
     case "1_anio":
       d.setFullYear(d.getFullYear() + 1);
+      break;
+    case "3_anios":
+      d.setFullYear(d.getFullYear() + 3);
       break;
   }
 
@@ -75,7 +99,6 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  // Fecha de hoy por defecto
   const today = useMemo(() => {
     const d = new Date();
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -105,7 +128,7 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
     mode: "onSubmit",
   });
 
-  // Observamos la fecha de extensión en tiempo real para el cálculo
+  // Observamos la fecha de extensión
   const fechaExtension = useWatch({ control: methods.control, name: "pat.fecha_extension" });
 
   // Handler para el selector rápido
@@ -117,7 +140,7 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
     
     const nuevaFecha = calcularFechaVencimiento(
       fechaExtension, 
-      value as "59_dias" | "3_meses" | "1_anio"
+      value as TipoDuracion
     );
     
     methods.setValue("pat.fecha_vencimiento", nuevaFecha, { 
@@ -129,8 +152,7 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
   const handleSubmit = (values: PatFormValues) => {
     setServerError(null);
 
-    // Validación manual de fechas (Vencimiento >= Extensión)
-    // Usamos T00:00:00 también aquí por consistencia
+    // Validación manual de fechas
     const ext = new Date(`${values.pat.fecha_extension}T00:00:00`);
     const ven = new Date(`${values.pat.fecha_vencimiento}T00:00:00`);
     
@@ -142,7 +164,6 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
       return;
     }
 
-    // Normalizaciones mínimas
     values.pat.nro_interno = values.pat.nro_interno.trim();
     values.pat.acceso_pat = values.pat.acceso_pat.trim();
 
@@ -155,7 +176,6 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
         return;
       }
       
-      // Reset parcial (limpiamos campos específicos)
       methods.reset({
         ...methods.getValues(),
         pat: {
@@ -210,15 +230,19 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
                     Fecha de vencimiento <span className="text-red-500">*</span>
                 </FormLabel>
                 
-                {/* Selector rápido (sin vincular al form state directamente) */}
+                {/* Selector rápido */}
                 <Select onValueChange={handleDuracionChange}>
-                    <SelectTrigger className="h-7 w-[140px] text-xs px-2 bg-slate-100 border-slate-300">
+                    <SelectTrigger className="h-7 w-[150px] text-xs px-2 bg-slate-100 border-slate-300">
                         <SelectValue placeholder="Cálculo rápido" />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="1_mes">1 Mes</SelectItem>
                         <SelectItem value="59_dias">59 Días</SelectItem>
                         <SelectItem value="3_meses">3 Meses</SelectItem>
+                        <SelectItem value="6_meses">6 Meses</SelectItem>
+                        <SelectItem value="fin_anio">31 Dic (Año actual)</SelectItem>
                         <SelectItem value="1_anio">1 Año</SelectItem>
+                        <SelectItem value="3_anios">3 Años</SelectItem>
                     </SelectContent>
                 </Select>
               </div>
@@ -294,8 +318,8 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
                   <FormControl>
                     <Input
                       type="text"
-                      inputMode="numeric"      // teclado numérico en mobile
-                      pattern="\d*"            // hint HTML
+                      inputMode="numeric"
+                      pattern="\d*"
                       maxLength={5}
                       placeholder="12345"
                       {...field}
@@ -329,7 +353,6 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
           {/* Sección Solicitante */}
           <SolicitanteSection />
 
-          {/* Error general */}
           {serverError && (
             <p className="text-sm text-red-600">{serverError}</p>
           )}
