@@ -13,24 +13,17 @@ import {
   actualizarEstadoDisenoPat,
 } from '@/lib/database/diseno-pat-queries';
 import { DatabaseError } from 'pg';
+import { requireUserId } from "@/lib/auth/session"; // Importamos la auth real
 
-// Helper seguro sin any
-function pickUserId(sessionData: unknown): string {
-  if (typeof sessionData !== 'object' || sessionData === null) return 'usuarioPruebaPases';
-  const rec = sessionData as Record<string, unknown>;
-  const user = rec.user as unknown;
-  if (typeof user !== 'object' || user === null) return 'usuarioPruebaPases';
-  const u = user as Record<string, unknown>;
-  const id = typeof u.id === 'string' && u.id.length > 0 ? u.id : null;
-  const username = typeof u.username === 'string' && u.username.length > 0 ? u.username : null;
-  return id ?? username ?? 'usuarioPruebaPases';
-}
+// Eliminamos pickUserId y NuevoDisenoPatInput complejo ya que el usuario se infiere de la sesión
+export type NuevoDisenoPatInput = Omit<DisenoPatInsertInput, 'creado_por'>;
 
-// Payload que espera la acción de creación
-export type NuevoDisenoPatInput = Omit<DisenoPatInsertInput, 'creado_por'> & { creado_por?: string };
-
-export async function crearDisenoPat(input: NuevoDisenoPatInput & { session?: unknown }) {
+export async function crearDisenoPat(input: NuevoDisenoPatInput) {
   try {
+    // 1. Verificación de Seguridad: Obtenemos ID de sesión segura
+    const userId = await requireUserId();
+
+    // 2. Construcción del payload
     const payload: DisenoPatInsertInput = {
       nombre: input.nombre,
       ancho_mm: input.ancho_mm,
@@ -38,16 +31,24 @@ export async function crearDisenoPat(input: NuevoDisenoPatInput & { session?: un
       dpi_previsualizacion: input.dpi_previsualizacion,
       lienzo_json: input.lienzo_json,
       estado: input.estado,
-      // si no vino, lo tomamos de la sesión
-      creado_por: input.creado_por ?? pickUserId(input.session),
+      creado_por: userId, // Usamos el ID verificado
     };
 
+    // 3. Inserción en DB
     const { id } = await insertarDisenoPat(payload);
 
     revalidatePath('/(protected)/(Pases)/pat/disenos');
     return { ok: true as const, id };
+
   } catch (error: unknown) {
+    // Manejo de errores consistente
     const db = error as Partial<DatabaseError>;
+    
+    // Si el error viene de requireUserId (no autenticado)
+    if (error instanceof Error && error.message.includes('session')) { 
+        return { ok: false as const, error: 'Usuario no autenticado.' };
+    }
+
     if (db && typeof db.code === 'string') {
       switch (db.code) {
         case '23505':
@@ -64,13 +65,34 @@ export async function crearDisenoPat(input: NuevoDisenoPatInput & { session?: un
 export type GuardarDisenoPatInput = DisenoPatUpdateInput;
 
 export async function guardarDisenoPat(input: GuardarDisenoPatInput) {
-  await actualizarDisenoPat(input);
-  return { ok: true as const };
+  try {
+    // 1. Auth check
+    const userId = await requireUserId();
+
+    // 2. Update DB pasando el usuario
+    await actualizarDisenoPat(input, userId);
+    
+    revalidatePath('/(protected)/(Pases)/pat/disenos');
+    return { ok: true as const };
+
+  } catch (error) {
+    console.error("Error al guardar diseño:", error);
+    return { ok: false as const, error: 'Error al actualizar el diseño' };
+  }
 }
 
-// (Opcional) acciones rápidas para estado, ya que tenemos la query
+// Acciones rápidas para estado
 export async function setEstadoDisenoPat(id: string, estado: EstadoDiseno) {
-  await actualizarEstadoDisenoPat(id, estado);
-  revalidatePath('/(protected)/(Pases)/pat/disenos');
-  return { ok: true as const };
+  try {
+    const userId = await requireUserId();
+    
+    // Pasamos userId para registrar quién cambió el estado
+    await actualizarEstadoDisenoPat(id, estado, userId);
+    
+    revalidatePath('/(protected)/(Pases)/pat/disenos');
+    return { ok: true as const };
+  } catch (error) {
+     console.error("Error al cambiar estado:", error);
+     return { ok: false as const, error: 'No se pudo cambiar el estado' };
+  }
 }
