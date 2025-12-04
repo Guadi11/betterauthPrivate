@@ -24,15 +24,25 @@ export interface WithTimestamps {
 }
 
 export interface WithAudit {
-  creado_por: string;          // user.id (texto)
-  actualizado_por?: string | null; // si más adelante lo agregamos
+  creado_por: string;            // user.id (texto)
+  // Actualizamos el tipo: en BD es nullable, y ya lo estamos usando.
+  actualizado_por: string | null; 
 }
 
-// Fila completa de BD
+// Fila completa de BD (Select * from diseno_pat)
 export type DisenoPatRow = DisenoPatCore & WithId & WithTimestamps & WithAudit;
 
-// Payloads
+// Inputs -------------------------------------------------------------
+
+// Input de creación: Necesitamos 'creado_por' en el payload interno de la query,
+// aunque la Action lo inyecte desde la sesión.
 export type DisenoPatInsertInput = DisenoPatCore & Pick<WithAudit, 'creado_por'>;
+
+// Input de actualización:
+// NOTA DIDÁCTICA: Mantenemos este tipo SIN 'actualizado_por'.
+// ¿Por qué? Porque este tipo representa lo que 'puede' venir del formulario/cliente.
+// El 'actualizado_por' se inyecta en el servidor (Action) y se pasa como argumento
+// separado a la query. Esto evita que alguien envíe un payload falsificando el usuario.
 export type DisenoPatUpdateInput = WithId & Partial<DisenoPatCore>;
 
 // Item para la tabla (listado)
@@ -44,4 +54,6 @@ export interface DisenoPatListItem {
   dpi_previsualizacion: number;
   estado: EstadoDiseno;
   actualizado_en: string;
+  // Opcional: Si en el futuro quieres mostrar en la tabla quién editó último,
+  // agregarías aquí: actualizado_por?: string | null;
 }
