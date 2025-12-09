@@ -1,112 +1,41 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod"; // <--- Importante
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Importamos tu componente reutilizable
 import SolicitanteSection from "@/components/solicitantes/seleccion-solicitante";
 
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+// Importamos el Schema y el Tipo
+import { ConfeccionarPatSchema, ConfeccionarPatFormData } from "@/lib/zod/pat-schemas";
 
-// --- Tipos y Definiciones ---
-
-type PatTipo = "ZC" | "ZR" | "HN" | "PS" | "OT";
-
-type PatFormValues = {
-  pat: {
-    fecha_extension: string;      // YYYY-MM-DD
-    fecha_vencimiento: string;    // YYYY-MM-DD
-    tipo_zona: PatTipo;
-    acceso_pat: string;
-    nro_interno: string;
-    causa_motivo_pat: string;
-  };
-  solicitante: {
-    identificador: string;
-    tipo_identificador: "MR" | "DNI";
-    nombre: string;
-    jerarquia: string;
-    destino: string;
-    telefono: string;
-  };
-};
-
-type SubmitResult = { ok: true } | { ok: false; message: string };
+// Definimos el tipo de duración para el helper (UI Logic)
+type TipoDuracion = "1_mes" | "59_dias" | "3_meses" | "6_meses" | "fin_anio" | "1_anio" | "3_anios";
 
 interface Props {
   documento: string;
-  onSubmit: (documento: string, values: PatFormValues) => Promise<SubmitResult>;
+  // Actualizamos la firma de onSubmit para que coincida con la nueva action
+  onSubmit: (documento: string, values: ConfeccionarPatFormData) => Promise<{ ok: boolean; message?: string; field?: string }>;
 }
-
-// --- Definimos los tipos de duración disponibles ---
-type TipoDuracion = 
-  | "1_mes" 
-  | "59_dias" 
-  | "3_meses" 
-  | "6_meses" 
-  | "fin_anio" 
-  | "1_anio" 
-  | "3_anios";
-
-// --- Helper para calcular fechas ---
-function calcularFechaVencimiento(fechaBase: string, tipo: TipoDuracion): string {
-  if (!fechaBase) return "";
-  
-  // Usamos T00:00:00 para evitar problemas de TimeZone
-  const d = new Date(`${fechaBase}T00:00:00`); 
-  
-  switch (tipo) {
-    case "1_mes":
-      d.setMonth(d.getMonth() + 1);
-      break;
-    case "59_dias":
-      d.setDate(d.getDate() + 59);
-      break;
-    case "3_meses":
-      d.setMonth(d.getMonth() + 3);
-      break;
-    case "6_meses":
-      d.setMonth(d.getMonth() + 6);
-      break;
-    case "fin_anio":
-      // Mes 11 es Diciembre (0-indexed), Día 31
-      // Mantenemos el año de la fecha base (fecha de extensión)
-      d.setMonth(11); 
-      d.setDate(31);
-      break;
-    case "1_anio":
-      d.setFullYear(d.getFullYear() + 1);
-      break;
-    case "3_anios":
-      d.setFullYear(d.getFullYear() + 3);
-      break;
-  }
-
-  // Formato YYYY-MM-DD
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
-// --- Componente Principal ---
 
 export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
-  const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const today = useMemo(() => {
-    const d = new Date();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${d.getFullYear()}-${m}-${day}`;
-  }, []);
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const methods = useForm<PatFormValues>({
+  // Inicializamos el formulario con el Resolver de Zod
+  const methods = useForm<ConfeccionarPatFormData>({
+    resolver: zodResolver(ConfeccionarPatSchema), // <--- La clave
     defaultValues: {
       pat: {
         fecha_extension: today,
@@ -125,93 +54,73 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
         telefono: "",
       },
     },
-    mode: "onSubmit",
+    mode: "onChange", // Valida mientras el usuario escribe (opcional, o "onBlur")
   });
 
-  // Observamos la fecha de extensión
+  // Helper para cálculo de fechas (UI Logic solamente)
   const fechaExtension = useWatch({ control: methods.control, name: "pat.fecha_extension" });
 
-  // Handler para el selector rápido
   const handleDuracionChange = (value: string) => {
     if (!fechaExtension) {
       toast.warning("Seleccione primero una fecha de extensión");
       return;
     }
+    const d = new Date(`${fechaExtension}T00:00:00`);
     
-    const nuevaFecha = calcularFechaVencimiento(
-      fechaExtension, 
-      value as TipoDuracion
-    );
-    
-    methods.setValue("pat.fecha_vencimiento", nuevaFecha, { 
-      shouldValidate: true, 
-      shouldDirty: true 
-    });
-  };
-
-  const handleSubmit = (values: PatFormValues) => {
-    setServerError(null);
-
-    // Validación manual de fechas
-    const ext = new Date(`${values.pat.fecha_extension}T00:00:00`);
-    const ven = new Date(`${values.pat.fecha_vencimiento}T00:00:00`);
-    
-    if (values.pat.fecha_vencimiento && ven < ext) {
-      methods.setError("pat.fecha_vencimiento", {
-        type: "manual",
-        message: "La fecha de vencimiento no puede ser anterior a la de extensión.",
-      });
-      return;
+    switch (value as TipoDuracion) {
+      case "1_mes": d.setMonth(d.getMonth() + 1); break;
+      case "59_dias": d.setDate(d.getDate() + 59); break;
+      case "3_meses": d.setMonth(d.getMonth() + 3); break;
+      case "6_meses": d.setMonth(d.getMonth() + 6); break;
+      case "fin_anio": d.setMonth(11); d.setDate(31); break;
+      case "1_anio": d.setFullYear(d.getFullYear() + 1); break;
+      case "3_anios": d.setFullYear(d.getFullYear() + 3); break;
     }
 
-    values.pat.nro_interno = values.pat.nro_interno.trim();
-    values.pat.acceso_pat = values.pat.acceso_pat.trim();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const fechaCalc = `${d.getFullYear()}-${m}-${day}`;
 
+    // Seteamos el valor. Zod validará si es correcta al momento.
+    methods.setValue("pat.fecha_vencimiento", fechaCalc, { shouldValidate: true });
+  };
+
+  const onValidSubmit = (values: ConfeccionarPatFormData) => {
     startTransition(async () => {
       const res = await onSubmit(documento, values);
+      
       if (!res.ok) {
-        const msg = res.message;
-        setServerError(msg);
-        toast.error(msg);
+        if (res.field) {
+            // Si el error viene de un campo específico (ej: unique constraint)
+            // @ts-expect-error: path string dinámico
+            methods.setError(res.field, { message: res.message });
+        } else {
+            toast.error(res.message || "Error al guardar");
+        }
         return;
       }
-      
-      methods.reset({
-        ...methods.getValues(),
-        pat: {
-          ...methods.getValues().pat,
-          acceso_pat: "",
-          nro_interno: "",
-          causa_motivo_pat: "",
-        },
-      });
 
       toast.success("PAT confeccionado correctamente.");
       router.push(`/registro/${encodeURIComponent(documento)}`);
+      router.refresh();
     });
   };
 
   return (
     <FormProvider {...methods}>
       <Form {...methods}>
-        <form
-          onSubmit={methods.handleSubmit(handleSubmit)}
-          className="space-y-6"
-        >
-          {/* Encabezado */}
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium">Documento del registro:</span> {documento}
-            </p>
+        <form onSubmit={methods.handleSubmit(onValidSubmit)} className="space-y-6">
+          
+          <div className="rounded-lg border p-4 bg-muted/20">
+            <p className="text-sm font-medium">Documento del registro: <span className="text-foreground">{documento}</span></p>
           </div>
 
-          {/* Campos del PAT */}
           <div className="grid gap-6 md:grid-cols-2">
             
+            {/* Fecha Extensión */}
             <FormField
               control={methods.control}
               name="pat.fecha_extension"
-              rules={{ required: "Requerido" }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Fecha de extensión <span className="text-red-500">*</span></FormLabel>
@@ -223,26 +132,21 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               )}
             />
 
-            {/* Selector de Duración Rápida + Input de Vencimiento */}
+            {/* Fecha Vencimiento + Calculadora */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <FormLabel className={serverError ? "text-destructive" : ""}>
-                    Fecha de vencimiento <span className="text-red-500">*</span>
+                <FormLabel className={methods.formState.errors.pat?.fecha_vencimiento ? "text-destructive" : ""}>
+                   Fecha de vencimiento <span className="text-red-500">*</span>
                 </FormLabel>
-                
-                {/* Selector rápido */}
                 <Select onValueChange={handleDuracionChange}>
-                    <SelectTrigger className="h-7 w-[150px] text-xs px-2 bg-slate-100 border-slate-300">
+                    <SelectTrigger className="h-7 w-[140px] text-xs px-2 bg-slate-100 border-slate-300">
                         <SelectValue placeholder="Cálculo rápido" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="1_mes">1 Mes</SelectItem>
                         <SelectItem value="59_dias">59 Días</SelectItem>
-                        <SelectItem value="3_meses">3 Meses</SelectItem>
-                        <SelectItem value="6_meses">6 Meses</SelectItem>
-                        <SelectItem value="fin_anio">31 Dic (Año actual)</SelectItem>
+                        <SelectItem value="fin_anio">Fin de Año</SelectItem>
                         <SelectItem value="1_anio">1 Año</SelectItem>
-                        <SelectItem value="3_anios">3 Años</SelectItem>
                     </SelectContent>
                 </Select>
               </div>
@@ -250,7 +154,6 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               <FormField
                 control={methods.control}
                 name="pat.fecha_vencimiento"
-                rules={{ required: "Requerido" }}
                 render={({ field }) => (
                   <FormItem className="space-y-0">
                     <FormControl>
@@ -262,17 +165,17 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               />
             </div>
 
+            {/* Tipo Zona */}
             <FormField
               control={methods.control}
               name="pat.tipo_zona"
-              rules={{ required: "Requerido" }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo <span className="text-red-500">*</span></FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar tipo" />
+                        <SelectValue placeholder="Seleccionar" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -288,45 +191,34 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               )}
             />
 
+            {/* Acceso A */}
             <FormField
               control={methods.control}
               name="pat.acceso_pat"
-              rules={{ required: "Requerido" }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Acceso a <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Sector / Oficina / Área" maxLength={100} {...field} />
+                    <Input placeholder="Sector / Oficina" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Nro Interno */}
             <FormField
               control={methods.control}
               name="pat.nro_interno"
-              rules={{
-                required: "Requerido",
-                minLength: { value: 4, message: "Debe tener 4 a 5 dígitos" },
-                maxLength: { value: 5, message: "Debe tener 4 a 5 dígitos" },
-                pattern:  { value: /^\d{4,5}$/, message: "Solo dígitos (4 a 5)" },
-              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nro. Interno <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="\d*"
-                      maxLength={5}
-                      placeholder="12345"
-                      {...field}
-                      onChange={(e) => {
-                        const soloDigitos = e.target.value.replace(/\D/g, "").slice(0, 5);
-                        field.onChange(soloDigitos);
-                      }}
+                    <Input 
+                        placeholder="1234" 
+                        maxLength={5} 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value.replace(/\D/g, ''))} // Solo números visualmente
                     />
                   </FormControl>
                   <FormMessage />
@@ -334,15 +226,15 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
               )}
             />
 
+            {/* Causa / Motivo */}
             <FormField
               control={methods.control}
               name="pat.causa_motivo_pat"
-              rules={{ required: "Requerido" }}
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel>Motivo / Causa <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Textarea rows={4} placeholder="Explique el motivo del PAT/PATF" {...field} />
+                    <Textarea placeholder="Explique el motivo..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -350,18 +242,16 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
             />
           </div>
 
-          {/* Sección Solicitante */}
+          {/* Sección Reutilizable de Solicitante */}
+          {/* Funciona automático porque el schema coincide con la estructura esperada */}
           <SolicitanteSection />
 
-          {serverError && (
-            <p className="text-sm text-red-600">{serverError}</p>
-          )}
-
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end pt-4">
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Guardando..." : "Confeccionar PAT"}
+              {isPending ? "Procesando..." : "Confeccionar PAT"}
             </Button>
           </div>
+
         </form>
       </Form>
     </FormProvider>
