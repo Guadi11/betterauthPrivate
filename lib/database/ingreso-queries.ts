@@ -41,6 +41,106 @@ export interface EstadisticasIngreso {
   ingresos_zr_hoy: number;
 }
 
+export interface FiltrosIngreso {
+  query?: string;        // Búsqueda de texto (nombre, dni, tarjeta)
+  estado?: 'todos' | 'abiertos'; // Filtro de estado
+  page?: number;         // Página actual (empieza en 1)
+  limit?: number;        // Cantidad por página
+}
+
+export interface RespuestaPaginada<T> {
+  data: T[];
+  metadata: {
+    total: number;
+    page: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}
+
+export async function obtenerIngresosFiltrados(filtros: FiltrosIngreso): Promise<RespuestaPaginada<IngresoCompleto>> {
+  noStore();
+  
+  const { query: busqueda, estado, page = 1, limit = 10 } = filtros;
+  const offset = (page - 1) * limit;
+
+  const conditions: string[] = [];
+  // CORRECCIÓN: Tipado estricto para los parámetros de pg
+  // Postgres acepta string, number, boolean, null o Date.
+  const params: (string | number | boolean | Date | null)[] = [];
+  
+  let sql = `
+    SELECT 
+      *,
+      COUNT(*) OVER() as total_count
+    FROM vista_ingresos_completa
+  `;
+
+  // --- FILTROS ---
+  if (busqueda) {
+    params.push(`%${busqueda}%`);
+    const paramIndex = params.length;
+    conditions.push(`(
+      nombre ILIKE $${paramIndex} OR 
+      apellido ILIKE $${paramIndex} OR 
+      documento ILIKE $${paramIndex} OR 
+      nro_tarjeta ILIKE $${paramIndex} OR
+      nombre_solicitante ILIKE $${paramIndex}
+    )`);
+  }
+
+  if (estado === 'abiertos') {
+    conditions.push(`fecha_egreso IS NULL`);
+  }
+
+  if (conditions.length > 0) {
+    sql += ' WHERE ' + conditions.join(' AND ');
+  }
+
+  // --- PAGINACIÓN ---
+  sql += ` ORDER BY fecha_ingreso DESC`;
+  
+  params.push(limit);
+  sql += ` LIMIT $${params.length}`;
+  
+  params.push(offset);
+  sql += ` OFFSET $${params.length}`;
+
+  try {
+    const result = await query(sql, params);
+    
+    // CORRECCIÓN: Parseo seguro del count (que viene como string en pg)
+    const firstRow = result.rows[0];
+    const totalCount = firstRow ? Number(firstRow.total_count) : 0;
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // CORRECCIÓN: Eliminación limpia de la propiedad auxiliar
+    // Usamos { total_count: _, ...rest } para decirle a TS "ignora esta variable"
+    const data = result.rows.map((row) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { total_count: _, ...rest } = row; 
+      return rest as IngresoCompleto;
+    });
+
+    return {
+      data,
+      metadata: {
+        total: totalCount,
+        page,
+        totalPages,
+        hasMore: page < totalPages
+      }
+    };
+
+  } catch (error) {
+    console.error('Error filtrando ingresos:', error);
+    return { 
+      data: [], 
+      metadata: { total: 0, page: 1, totalPages: 0, hasMore: false } 
+    };
+  }
+}
+
 // --- NUEVA FUNCIÓN PARA EL DASHBOARD ---
 export async function obtenerEstadisticasDashboard(): Promise<EstadisticasIngreso> {
   noStore(); // Evita que Next.js cachee estos números estáticamente
