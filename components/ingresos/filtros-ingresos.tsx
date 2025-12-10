@@ -53,7 +53,7 @@ export default function FiltrosIngresos() {
         </label>
         <input
           className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
-          placeholder="Buscar por nombre, DNI o tarjeta..."
+          placeholder="Buscar por nombre, DNI, lugar o tarjeta..."
           // onChange llama a la función debounced
           onChange={(e) => handleSearch(e.target.value)}
           // defaultValue lee de la URL inicial para mantener el estado al recargar

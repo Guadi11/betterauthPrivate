@@ -85,7 +85,8 @@ export async function obtenerIngresosFiltrados(filtros: FiltrosIngreso): Promise
       apellido ILIKE $${paramIndex} OR 
       documento ILIKE $${paramIndex} OR 
       nro_tarjeta ILIKE $${paramIndex} OR
-      nombre_solicitante ILIKE $${paramIndex}
+      nombre_solicitante ILIKE $${paramIndex} OR
+      lugar_visita ILIKE $${paramIndex}
     )`);
   }
 
