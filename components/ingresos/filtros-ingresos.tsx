@@ -2,9 +2,9 @@
 
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
-import { Search, X } from 'lucide-react'; // Asumo que usas lucide-react (default en shadcn)
+import { Search, X } from 'lucide-react';
+import { useState, useEffect } from 'react'; // <--- Importamos hooks
 
-// Componentes de Shadcn UI
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,16 @@ export default function FiltrosIngresos() {
   const pathname = usePathname();
   const { replace } = useRouter();
 
-  // 1. Búsqueda (Debounce)
+  // 1. ESTADO LOCAL PARA EL INPUT
+  // Inicializamos con lo que venga en la URL o cadena vacía
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '');
+
+  // 2. SINCRONIZACIÓN (El truco para el botón "Limpiar")
+  // Si la URL cambia externamente (ej: click en limpiar), actualizamos el input local
+  useEffect(() => {
+    setSearchTerm(searchParams.get('query') || '');
+  }, [searchParams]);
+
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('page', '1');
@@ -30,31 +39,25 @@ export default function FiltrosIngresos() {
     replace(`${pathname}?${params.toString()}`);
   }, 300);
 
-  // 2. Estado (Adaptado para Shadcn Select onValueChange)
   const handleEstadoChange = (valor: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('page', '1');
-    
     if (valor === 'todos') params.delete('estado');
     else params.set('estado', valor);
-    
     replace(`${pathname}?${params.toString()}`);
   };
 
-  // 3. Fechas
   const handleDateChange = (key: 'desde' | 'hasta', value: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('page', '1');
-
     if (value) params.set(key, value);
     else params.delete(key);
-    
     replace(`${pathname}?${params.toString()}`);
   };
 
-  // 4. Limpiar todo
   const clearFilters = () => {
     replace(pathname);
+    // El useEffect se encargará de limpiar el input visualmente
   };
 
   const hasActiveFilters = searchParams.get('query') || 
@@ -64,26 +67,27 @@ export default function FiltrosIngresos() {
 
   return (
     <div className="space-y-4 mb-6">
-      
-      {/* Fila Superior: Búsqueda y Estado */}
       <div className="flex flex-col sm:flex-row gap-4">
         
-        {/* Input de Búsqueda con Icono */}
+        {/* Input de Búsqueda Controlado */}
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nombre, DNI, tarjeta o lugar..."
             className="pl-9"
-            onChange={(e) => handleSearch(e.target.value)}
-            defaultValue={searchParams.get('query')?.toString()}
+            value={searchTerm} // <--- Vinculado al estado local
+            onChange={(e) => {
+              setSearchTerm(e.target.value); // Actualiza UI inmediata
+              handleSearch(e.target.value);  // Actualiza URL con debounce
+            }}
           />
         </div>
 
-        {/* Select de Estado */}
         <div className="w-full sm:w-[200px]">
           <Select 
             onValueChange={handleEstadoChange} 
-            defaultValue={searchParams.get('estado') || 'todos'}
+            // Usamos key para forzar re-render si el valor de la URL es null (para limpiar el select visualmente también)
+            value={searchParams.get('estado') || 'todos'} 
           >
             <SelectTrigger>
               <SelectValue placeholder="Estado" />
@@ -96,9 +100,7 @@ export default function FiltrosIngresos() {
         </div>
       </div>
 
-      {/* Fila Inferior: Fechas y Botón de Limpiar */}
       <div className="flex flex-col sm:flex-row gap-4 items-end sm:items-center justify-between">
-        
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <div className="grid gap-1.5">
              <span className="text-xs font-medium text-muted-foreground ml-1">Desde</span>
@@ -106,7 +108,9 @@ export default function FiltrosIngresos() {
                 type="date" 
                 className="w-full sm:w-[160px]"
                 onChange={(e) => handleDateChange('desde', e.target.value)}
-                defaultValue={searchParams.get('desde')?.toString()}
+                // Para inputs date, defaultValue suele funcionar bien, 
+                // pero si quieres que se limpien forzadamente, usa value={... || ''}
+                value={searchParams.get('desde') || ''}
              />
           </div>
 
@@ -116,13 +120,12 @@ export default function FiltrosIngresos() {
                 type="date" 
                 className="w-full sm:w-[160px]"
                 onChange={(e) => handleDateChange('hasta', e.target.value)}
-                defaultValue={searchParams.get('hasta')?.toString()}
+                value={searchParams.get('hasta') || ''}
                 max={new Date().toISOString().split('T')[0]} 
              />
           </div>
         </div>
 
-        {/* Botón Reset (Solo visible si hay filtros) */}
         {hasActiveFilters && (
           <Button 
             variant="ghost" 
