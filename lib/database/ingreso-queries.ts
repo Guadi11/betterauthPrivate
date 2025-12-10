@@ -29,9 +29,14 @@ export interface IngresoConSolicitante extends Ingreso {
 }
 
 export interface IngresoCompleto extends IngresoConSolicitante {
-  nombre_registro: string;
-  apellido_registro: string;
-  tipo_documento_registro: string;
+  nombre: string;
+  apellido: string;
+  tipo_documento: string;
+  fecha_nacimiento: Date;
+  nacionalidad: string;
+  domicilio_real: string;
+  domicilio_eventual: string;
+  referido_cc: boolean;
 }
 
 export interface EstadisticasIngreso {
@@ -277,31 +282,4 @@ export async function insertarIngreso(data: {
     data.identificador_solicitante,
     data.abierto_por
   ]);
-}
-
-export async function obtenerIngresosCompletos(): Promise<IngresoCompleto[]> {
-  const res = await query(`
-    SELECT 
-      id_ingreso,
-      documento,
-      nro_tarjeta,
-      fecha_ingreso,
-      fecha_egreso,
-      lugar_visita,
-      motivo,
-      observacion,
-      identificador_solicitante,
-      tipo_identificador,
-      jerarquia,
-      destino,
-      telefono,
-      nombre_solicitante,
-      r.nombre AS nombre_registro,
-      r.apellido AS apellido_registro,
-      r.tipo_documento AS tipo_documento_registro
-    FROM vista_ingresos_completa r
-    ORDER BY fecha_ingreso DESC
-  `);  
-  
-  return res.rows as IngresoCompleto[];
 }
