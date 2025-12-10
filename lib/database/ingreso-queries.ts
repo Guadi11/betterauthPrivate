@@ -46,6 +46,8 @@ export interface FiltrosIngreso {
   estado?: 'todos' | 'abiertos'; // Filtro de estado
   page?: number;         // Página actual (empieza en 1)
   limit?: number;        // Cantidad por página
+  fechaDesde?: string; // Formato YYYY-MM-DD
+  fechaHasta?: string; // Formato YYYY-MM-DD
 }
 
 export interface RespuestaPaginada<T> {
@@ -61,7 +63,7 @@ export interface RespuestaPaginada<T> {
 export async function obtenerIngresosFiltrados(filtros: FiltrosIngreso): Promise<RespuestaPaginada<IngresoCompleto>> {
   noStore();
   
-  const { query: busqueda, estado, page = 1, limit = 10 } = filtros;
+  const { query: busqueda, estado, page = 1, limit = 10, fechaDesde, fechaHasta } = filtros;
   const offset = (page - 1) * limit;
 
   const conditions: string[] = [];
@@ -92,6 +94,17 @@ export async function obtenerIngresosFiltrados(filtros: FiltrosIngreso): Promise
 
   if (estado === 'abiertos') {
     conditions.push(`fecha_egreso IS NULL`);
+  }
+  
+  if (fechaDesde) {
+    params.push(fechaDesde);
+    // Casteamos el timestamp a date para comparar solo el día
+    conditions.push(`fecha_ingreso::date >= $${params.length}`);
+  }
+
+  if (fechaHasta) {
+    params.push(fechaHasta);
+    conditions.push(`fecha_ingreso::date <= $${params.length}`);
   }
 
   if (conditions.length > 0) {

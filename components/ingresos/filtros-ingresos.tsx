@@ -43,11 +43,24 @@ export default function FiltrosIngresos() {
     replace(`${pathname}?${params.toString()}`);
   };
 
+  const handleDateChange = (key: 'desde' | 'hasta', value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', '1'); // Siempre resetear a página 1 al filtrar
+
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    
+    replace(`${pathname}?${params.toString()}`);
+  };
+
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+    <div className="flex flex-col gap-4 mb-6">
       
       {/* Input de Búsqueda */}
-      <div className="relative flex flex-1 flex-shrink-0">
+      <div className="flex flex-col md:flex-row gap-4 justify-between">
         <label htmlFor="search" className="sr-only">
           Buscar
         </label>
@@ -78,6 +91,51 @@ export default function FiltrosIngresos() {
           <option value="todos">Todos los ingresos</option>
           <option value="abiertos">Solo ingresos abiertos</option>
         </select>
+      </div>
+
+      {/* Fila inferior: Filtros de Fecha */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-gray-500 font-medium mr-2">Filtrar fecha:</span>
+        
+        <div className="flex items-center gap-2">
+            <label htmlFor="desde" className="sr-only">Desde</label>
+            <input
+            type="date"
+            id="desde"
+            className="rounded-md border border-gray-200 py-[9px] px-3 text-sm outline-2 text-gray-600"
+            onChange={(e) => handleDateChange('desde', e.target.value)}
+            defaultValue={searchParams.get('desde')?.toString()}
+            />
+        </div>
+
+        <span className="text-gray-400">-</span>
+
+        <div className="flex items-center gap-2">
+            <label htmlFor="hasta" className="sr-only">Hasta</label>
+            <input
+            type="date"
+            id="hasta"
+            className="rounded-md border border-gray-200 py-[9px] px-3 text-sm outline-2 text-gray-600"
+            onChange={(e) => handleDateChange('hasta', e.target.value)}
+            defaultValue={searchParams.get('hasta')?.toString()}
+            max={new Date().toISOString().split('T')[0]} // Opcional: No permitir fechas futuras
+            />
+        </div>
+        
+        {/* Botón opcional para limpiar fechas si hay alguna seleccionada */}
+        {(searchParams.get('desde') || searchParams.get('hasta')) && (
+            <button
+                onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('desde');
+                    params.delete('hasta');
+                    replace(`${pathname}?${params.toString()}`);
+                }}
+                className="text-xs text-red-600 hover:text-red-800 underline ml-2"
+            >
+                Limpiar fechas
+            </button>
+        )}
       </div>
     </div>
   );

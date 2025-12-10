@@ -9,6 +9,8 @@ interface Props {
     query?: string;
     page?: string;
     estado?: string;
+    desde?: string; 
+    hasta?: string;
   }>;
 }
 
@@ -18,12 +20,16 @@ export default async function IngresosPage(props: Props) {
   const query = searchParams.query || '';
   const currentPage = Number(searchParams.page) || 1;
   const estado = searchParams.estado === 'abiertos' ? 'abiertos' : 'todos';
+  const fechaDesde = searchParams.desde;
+  const fechaHasta = searchParams.hasta;
 
   const { data: ingresos, metadata } = await obtenerIngresosFiltrados({
     query,
     page: currentPage,
     estado: estado as 'todos' | 'abiertos',
-    limit: 10
+    limit: 10,
+    fechaDesde,
+    fechaHasta
   });
 
   return (
