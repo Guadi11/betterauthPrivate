@@ -7,24 +7,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 
-import { authClient } from '@/lib/auth-client';
 import { crearDisenoPat } from '@/lib/database/diseno-pat-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { disenoPatCoreSchema, estadoDisenoEnum } from '@/lib/pat/disenos/diseno-pat-schemas';
-
-// -------- Helpers sin any
-function pickUserId(sessionData: unknown): string {
-  if (typeof sessionData !== 'object' || sessionData === null) return 'usuarioPruebaPases';
-  const rec = sessionData as Record<string, unknown>;
-  const user = rec.user as unknown;
-  if (typeof user !== 'object' || user === null) return 'usuarioPruebaPases';
-  const u = user as Record<string, unknown>;
-  const id = typeof u.id === 'string' && u.id.length > 0 ? u.id : null;
-  const username = typeof u.username === 'string' && u.username.length > 0 ? u.username : null;
-  return id ?? username ?? 'usuarioPruebaPases';
-}
 
 const CrearSchema = disenoPatCoreSchema
   .omit({ lienzo_json: true, estado: true })
@@ -45,7 +32,6 @@ function mmToPx(mm: number, dpi: number): number {
 
 export function CrearDisenoPatForm() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<DisenoPatFormValues>({
@@ -78,8 +64,6 @@ export function CrearDisenoPatForm() {
         lienzo_json: initialKonvaJson, // objeto → ::jsonb
         estado: estadoDisenoEnum.enum.borrador,
         // dejamos que la action ponga creado_por desde session si no lo enviamos
-        creado_por: pickUserId(session),
-        session, // para que action pueda tomar user.id si quisieras omitir el campo
       });
 
       if (res.ok) {
