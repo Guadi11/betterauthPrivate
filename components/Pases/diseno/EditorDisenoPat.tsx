@@ -15,9 +15,7 @@ import { toast } from 'sonner';
 import EditorCanvasKonva from './EditorCanvasKonva';
 import CanvasToolbar from './editor/CanvasToolbar';
 import GridControls from './editor/GridControls';
-import VariablesPanel from './editor/VariablesPanel';
 import { EditorEvent } from '@/lib/pat/disenos/editor/editor-events';
-import type { Vars } from '@/lib/pat/disenos/editor/vars';
 import RecursosSheet from '@/components/Recursos/recursos-sheet';
 import {
   vincularRecursoADisenoAction,
@@ -85,12 +83,6 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
   // Grid + Snap UI state
   const [gridStepMm, setGridStepMm] = useState<number>(1);
   const [snapEnabled, setSnapEnabled] = useState<boolean>(false);
-
-  // TODO: VALIDAR SI ESTO QUEDA EN EL EDITOR -> Variables para futuros reemplazos (si querés usarlas luego en preview/export)
-  const [vars, setVars] = useState<Vars>({
-    registro: { nombre: 'Juan', apellido: 'Pérez', documento: '12345678' },
-    solicitante: { nombre: 'Cap. Gómez' },
-  });
 
   const onCanvasChange = useCallback((newJson: string) => {
     setJsonString(newJson);
@@ -197,7 +189,6 @@ export default function EditorDisenoPat({ diseno }: { diseno: DisenoPat }) {
                 if (typeof next.snapEnabled === 'boolean') setSnapEnabled(next.snapEnabled);
               }}
             />
-            <VariablesPanel vars={vars} onChange={setVars} />
 
             <div className="flex gap-3 items-center">
               <Button type="submit" variant="default" disabled={isSaving}>

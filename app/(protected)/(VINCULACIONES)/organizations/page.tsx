@@ -1,22 +1,14 @@
 import AccesoDenegado from "@/components/acceso-denegado";
-import { auth } from "@/lib/auth";
-import { getOrganizationMembers, getUserRoleInOrganization, UserOrganization } from "@/lib/database/organization-queries";
-import { headers } from "next/headers";
+import { getOrganizationMembers, UserOrganization } from "@/lib/database/organization-queries";
+import { checkOrganizationAccess } from "@/lib/organization/organization-acces";
+import { ORGANIZATION_IDS } from "@/lib/organization/organization-ids";
 
 // Al marcar el componente como async, podemos usar await directamente
 export default async function Organizations() {
   // Verificar acceso
-  const reqHeaders = await headers();
-
-  const session = await auth.api.getSession({headers: reqHeaders});
-
-  // ID de la organización "Personal Vinculaciones"
-  const organizationId = "fIVd5L9F3AfiC94NETPaQZvlwqOuZ183";
-
-  // Verificar si el usuario pertenece a la organización "Personal Vinculaciones"
-  const userRole = await getUserRoleInOrganization(session.user.id, organizationId);
-      
-  if (!userRole) {
+   const organizationId = ORGANIZATION_IDS.PERSONAL_VINCULACIONES;
+   const accessResult = await checkOrganizationAccess({organizationId});
+  if (!accessResult.authorized) {
     //No mostrar la componente
     return(<AccesoDenegado/>);
   }
