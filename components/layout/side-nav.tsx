@@ -6,7 +6,6 @@ import BotonesVinculacionesLayout from "../Vinculaciones/layout-botones-vinculac
 import BotonesPasesLayout from "../Pases/layout-botones-pases";
 import UserCard from "./user-card";
 import BotonCrearRegistro from "@/components/registros/boton-crear-registro";
-import ListadoRegistrosButton from "@/components/registros/listado-registros-button";
 import BotonBuscarRegistro from "@/components/registros/buscar-registro-button";
 
 export default function Sidebar() {
@@ -30,7 +29,6 @@ export default function Sidebar() {
         <nav className="flex-1 py-4 px-2 space-y-3">
           <BotonCrearRegistro/>
           <BotonBuscarRegistro/>
-          <ListadoRegistrosButton/>
           <BotonesPENLayout/>
           <BotonesVinculacionesLayout/>
           <BotonesPasesLayout/>
