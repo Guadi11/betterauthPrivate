@@ -47,5 +47,7 @@ export function serializeStagePruned(stage: Konva.Stage): string {
   }
 
   // devolver JSON compacto
-  return clone.toJSON();
+  const json = clone.toJSON();
+  clone.destroy();
+  return json;
 }
