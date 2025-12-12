@@ -329,16 +329,14 @@ export default function EditorCanvasKonva({
           stage.height() * 0.6
         );
 
-        node.setAttrs({
-          x: 80,
-          y: 80,
-          width: w,
-          height: h,
-          draggable: true,
-          imageSrc: src,            // re-hidratación
-          dataRecursoId: recursoId, // sync
-          __aspect: r,              // guardar ratio para snap/resize
-        });
+        node.position({ x: 80, y: 80 });
+        node.size({ width: w, height: h });
+        node.draggable(true);
+
+        // attrs custom para tu serialización / rehidratación
+        node.setAttr('imageSrc', src);
+        if (recursoId) node.setAttr('dataRecursoId', recursoId);
+        node.setAttr('__aspect', r);
 
         layer.add(node);
         layer.draw();
