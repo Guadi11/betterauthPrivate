@@ -7,6 +7,7 @@ import BotonesPasesLayout from "../Pases/layout-botones-pases";
 import UserCard from "./user-card";
 import BotonCrearRegistro from "@/components/registros/boton-crear-registro";
 import BotonBuscarRegistro from "@/components/registros/buscar-registro-button";
+import BotonVerSolicitantes from "@/components/solicitantes/ver-solicitantes-buttons";
 
 export default function Sidebar() {
     return (
@@ -29,6 +30,7 @@ export default function Sidebar() {
         <nav className="flex-1 py-4 px-2 space-y-3">
           <BotonCrearRegistro/>
           <BotonBuscarRegistro/>
+          <BotonVerSolicitantes/>
           <BotonesPENLayout/>
           <BotonesVinculacionesLayout/>
           <BotonesPasesLayout/>
