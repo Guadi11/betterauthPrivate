@@ -4,7 +4,7 @@ import { Users } from "lucide-react";
 
 export default function BotonVerSolicitantes(){
     return(
-        <Link className={buttonVariants({ variant: "default", size: "sidenav" })} href={'/crear_registro'}> 
+        <Link className={buttonVariants({ variant: "default", size: "sidenav" })} href={'/solicitantes'}> 
             <Users/> Ver Solicitantes
         </Link>
     );
