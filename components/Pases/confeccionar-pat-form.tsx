@@ -145,8 +145,11 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
                     <SelectContent>
                         <SelectItem value="1_mes">1 Mes</SelectItem>
                         <SelectItem value="59_dias">59 Días</SelectItem>
+                        <SelectItem value="3_meses">3 Meses</SelectItem>
+                        <SelectItem value="6_meses">6 Meses</SelectItem>
                         <SelectItem value="fin_anio">Fin de Año</SelectItem>
                         <SelectItem value="1_anio">1 Año</SelectItem>
+                        <SelectItem value="3_anios">3 Años</SelectItem>
                     </SelectContent>
                 </Select>
               </div>
@@ -199,7 +202,7 @@ export default function ConfeccionarPatForm({ documento, onSubmit }: Props) {
                 <FormItem>
                   <FormLabel>Acceso a <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="Sector / Oficina" {...field} />
+                    <Input placeholder="Destino / Sector / Oficina" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
