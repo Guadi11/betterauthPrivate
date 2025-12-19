@@ -48,6 +48,7 @@ export interface EstadisticasIngreso {
 
 export interface FiltrosIngreso {
   query?: string;        // Búsqueda de texto (nombre, dni, tarjeta)
+  solicitante?: string;
   estado?: 'todos' | 'abiertos'; // Filtro de estado
   page?: number;         // Página actual (empieza en 1)
   limit?: number;        // Cantidad por página
@@ -68,7 +69,7 @@ export interface RespuestaPaginada<T> {
 export async function obtenerIngresosFiltrados(filtros: FiltrosIngreso): Promise<RespuestaPaginada<IngresoCompleto>> {
   noStore();
   
-  const { query: busqueda, estado, page = 1, limit = 10, fechaDesde, fechaHasta } = filtros;
+  const { query: busqueda, solicitante, estado, page = 1, limit = 10, fechaDesde, fechaHasta } = filtros;
   const offset = (page - 1) * limit;
 
   const conditions: string[] = [];
@@ -94,6 +95,18 @@ export async function obtenerIngresosFiltrados(filtros: FiltrosIngreso): Promise
       nro_tarjeta ILIKE $${paramIndex} OR
       nombre_solicitante ILIKE $${paramIndex} OR
       lugar_visita ILIKE $${paramIndex}
+    )`);
+  }
+
+  // --- NUEVO: FILTRO POR SOLICITANTE ---
+  if (solicitante) {
+    params.push(`%${solicitante}%`); // Agregamos comodines para búsqueda parcial
+    const paramIndex = params.length;
+    
+    // Buscamos coincidencia en el ID (legajo/matrícula) O en el nombre
+    conditions.push(`(
+      identificador_solicitante ILIKE $${paramIndex} OR 
+      nombre_solicitante ILIKE $${paramIndex}
     )`);
   }
 
