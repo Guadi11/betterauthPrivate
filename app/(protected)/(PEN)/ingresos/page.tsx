@@ -1,4 +1,4 @@
-// app/ingresos/page.tsx
+// app/ingresos/page
 import TablaDeIngresos from "@/components/ingresos/tabla-ingresos-completos";
 import { obtenerIngresosFiltrados } from "@/lib/database/ingreso-queries";
 import FiltrosIngresos from "@/components/ingresos/filtros-ingresos";
