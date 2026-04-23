@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { auth } from "@/lib/auth"; // Añade esta importación
 import Sidebar from '@/components/layout/side-nav'; // Añade esta importación
 import "./globals.css";
 import { headers } from "next/headers";
 import { Toaster } from "@/components/ui/sonner" 
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const systemFontClass = "antialiased";
 
 export const metadata: Metadata = {
   title: "Contra Inteligencia",
@@ -32,9 +23,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={systemFontClass}>
         <div className="flex h-screen">
           {session?.user ? (
             <>
